@@ -262,7 +262,7 @@ export async function generateImage({ prompt, context, styleOverride, vaultPath,
   const relPath = vaultPath || `assets/generated/img-${Date.now()}.png`;
 
   const instruction =
-    `You are the Canvas Visual Reasoning & UI/UX Design Engine adhering strictly to the ui-ux-design-master, canvas-visual-reasoning, and gaming-visual-engine protocols. ` +
+    `You are the Canvas Visual Reasoning, Thumbnail Art Direction & UI/UX Design Engine adhering strictly to the thumbnail-architect, ui-ux-design-master, canvas-visual-reasoning, and gaming-visual-engine protocols. ` +
     `Focal Concept Card: "${prompt}". ` +
     (context ? `Upstream Graph Context & Storyline Lineage: "${context}". ` : "") +
     `Selected Aesthetic Profile: "${styleType}" (Target Aspect Ratio: "${aspectRatio}"). ` +
