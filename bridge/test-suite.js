@@ -223,12 +223,41 @@ describe("2. Style Registry & Style Resolution", () => {
     assert.ok(prompt.includes("--no no bright cheerful colors"), "Visual prompt must include negative constraints prefixed with --no");
   });
 
-  it("should build fallback visual prompt gracefully when style/media are omitted", () => {
-    const fallbackPrompt = buildVisualPrompt({
-      subject: "A plain concept card",
-      context: "Some context",
+  it("should support Universal Realistic Style Family and all 7 realism variants", () => {
+    const realisticVariants = [
+      "photorealistic",
+      "documentary-realism",
+      "studio-realism",
+      "product-photography",
+      "architectural-realism",
+      "fashion-realism",
+      "cinematic-realism",
+    ];
+
+    for (const variantId of realisticVariants) {
+      const style = getStyleById(variantId);
+      assert.ok(style, `Style variant ${variantId} must exist`);
+      assert.equal(style.family, "realistic", `Variant ${variantId} must belong to 'realistic' family`);
+      assert.ok(style.negativeConstraints.includes("HUD"), `Variant ${variantId} must reject HUD`);
+      assert.ok(style.negativeConstraints.includes("cyberpunk"), `Variant ${variantId} must reject cyberpunk`);
+      assert.ok(style.negativeConstraints.includes("technical grids"), `Variant ${variantId} must reject technical grids`);
+    }
+
+    // Shorthand alias resolution
+    const resRealistic = resolveStyle({ styleOverride: "realistic" });
+    assert.equal(resRealistic.style.id, "photorealistic", "Shorthand 'realistic' must map to 'photorealistic'");
+
+    // Realism prompt building contains Realism Directive
+    const photoStyle = getStyleById("photorealistic");
+    const media = getMediaById("poster");
+    const photoPrompt = buildVisualPrompt({
+      subject: "Designers collaborating around a glass table in a sunlit loft",
+      style: photoStyle,
+      media,
     });
-    assert.equal(fallbackPrompt, "A plain concept card. Context: Some context");
+
+    assert.ok(photoPrompt.includes("Realism Directive: Prioritize believable physical materials"), "Photorealistic prompt must include Realism Directive");
+    assert.ok(photoPrompt.includes("--no HUD"), "Photorealistic prompt must include realistic negative constraints");
   });
 });
 

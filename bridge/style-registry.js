@@ -10,30 +10,137 @@
  * Skills consume this via resolveStyle() and buildVisualPrompt().
  */
 
+// ── Shared Universal Realism Negative Constraints ─────────────────────────────
+
+export const REALISTIC_NEGATIVE_CONSTRAINTS = [
+  "HUD", "interface overlays", "technical grids", "sci-fi graphics",
+  "cyberpunk", "futuristic UI", "random symbols", "neon accents",
+  "excessive glow", "excessive bloom", "artificial lens flare",
+  "plastic skin", "waxy skin", "CGI appearance", "3D-rendered appearance",
+  "excessive sharpening", "oversaturation", "unrealistic proportions",
+  "impossible reflections", "inconsistent shadows", "artificial background details",
+  "generic AI aesthetic", "unnecessary decorative elements"
+];
+
 // ── Style Registry ────────────────────────────────────────────────────────────
 
 export const STYLE_REGISTRY = {
 
-  // ── CINEMATIC FAMILY ──────────────────────────────────────────────────────
+  // ── UNIVERSAL REALISTIC FAMILY ─────────────────────────────────────────────
+
+  "photorealistic": {
+    id: "photorealistic",
+    name: "Photorealistic (Universal)",
+    family: "realistic",
+    category: "photographic",
+    description: "Maximum photographic realism. Physically believable lighting, authentic materials, natural imperfections, and true lens behavior.",
+    compatibleMedia: ["poster", "thumbnail", "keyart", "concept-art", "social", "editorial"],
+    composition: "Photographic composition, natural perspective, coherent spatial depth without artificial symmetry",
+    camera: "50mm or 35mm natural perspective, authentic lens behavior, physically realistic depth of field and aperture",
+    lighting: "Physically plausible natural lighting, believable shadow direction, softness, contact shadows, and natural falloff",
+    color: "Natural balanced color, realistic skin tones, believable material colors, no artificial saturation or neon tint",
+    texture: "Authentic micro-textures, fine surface variations, subtle material wear, natural imperfections and dust",
+    mood: "Genuinely physical, believable, grounded real-world presence",
+    negativeConstraints: REALISTIC_NEGATIVE_CONSTRAINTS,
+  },
+
+  "documentary-realism": {
+    id: "documentary-realism",
+    name: "Documentary Realism",
+    family: "realistic",
+    category: "photographic",
+    description: "Authentic, observational photojournalism. Available natural light, real unpolished environments, candid human truth.",
+    compatibleMedia: ["poster", "thumbnail", "social", "editorial"],
+    composition: "Environmental framing, subject in un-staged context, foreground-background narrative depth",
+    camera: "28mm or 35mm documentary framing, natural candid perspective, realistic exposure",
+    lighting: "Available ambient light, natural daylight or window light, authentic shadow falloff",
+    color: "Muted documentary palette, realistic skin tones, zero artificial color grading",
+    texture: "Natural authentic textures, real environment grain, physical wear",
+    mood: "Authentic, human, observational, genuine",
+    negativeConstraints: REALISTIC_NEGATIVE_CONSTRAINTS,
+  },
+
+  "studio-realism": {
+    id: "studio-realism",
+    name: "Studio Realism",
+    family: "realistic",
+    category: "photographic",
+    description: "Controlled professional photography. Clean lighting setup, subject separation, precise exposure, material accuracy.",
+    compatibleMedia: ["asset", "poster", "social", "editorial"],
+    composition: "Clean centered or golden-ratio staging, subject isolation, controlled background",
+    camera: "85mm portrait or 90mm medium format, precise focus distance, sharp subject detail",
+    lighting: "Controlled softbox key light with white bounce fill, clean contact shadows, no unnatural rim halos",
+    color: "Accurate color rendition, clean neutral studio balance, true material response",
+    texture: "High surface detail, realistic specular highlights, fine material roughness",
+    mood: "Professional, clean, precise, trustworthy",
+    negativeConstraints: REALISTIC_NEGATIVE_CONSTRAINTS,
+  },
+
+  "product-photography": {
+    id: "product-photography",
+    name: "Product Photography",
+    family: "realistic",
+    category: "photographic",
+    description: "Commercial product photography. Accurate geometry, pristine material roughness and reflectivity, controlled reflections.",
+    compatibleMedia: ["asset", "poster", "social", "editorial"],
+    composition: "Centered or slightly off-center product hero composition, clean studio environment",
+    camera: "Medium format, 90mm macro or 100mm telephoto, f/11 deep focus across product geometry",
+    lighting: "Softbox key light, white bounce fill, subtle rim separation, physically coherent reflections",
+    color: "Neutral studio whites and grays, product colors isolated and true to physical materials",
+    texture: "Accurate surface roughness, specular highlights on glass/metal, realistic material response",
+    mood: "Premium, desirable, trustworthy, commercial clarity",
+    negativeConstraints: [...REALISTIC_NEGATIVE_CONSTRAINTS, "no busy backgrounds", "no hands", "no cluttered background"],
+  },
+
+  "architectural-realism": {
+    id: "architectural-realism",
+    name: "Architectural Realism",
+    family: "realistic",
+    category: "photographic",
+    description: "Accurate architectural photography. Spatial volume, natural daylight streaming through fenestration, material honesty.",
+    compatibleMedia: ["poster", "editorial", "thumbnail", "concept-art"],
+    composition: "One-point perspective or 24mm tilt-shift perspective, vertical line correction, deep depth layering",
+    camera: "24mm wide architectural lens, deep f/8-f/11 depth of field, rectilinear geometry",
+    lighting: "Natural solar illumination, skylights, subtle interior bounce, physically accurate shadow angles",
+    color: "Neutral balanced daylight, authentic concrete, wood, glass, and steel material response",
+    texture: "Tactile architectural surfaces, board-formed concrete, brushed metal, clear glass refraction",
+    mood: "Serene, monumental, spatially articulate, grounded",
+    negativeConstraints: REALISTIC_NEGATIVE_CONSTRAINTS,
+  },
+
+  "fashion-realism": {
+    id: "fashion-realism",
+    name: "Fashion Realism",
+    family: "realistic",
+    category: "photographic",
+    description: "Editorial fashion photography. Realistic fabric drape and fibers, natural skin texture, authentic lighting and pose.",
+    compatibleMedia: ["poster", "editorial", "social", "thumbnail"],
+    composition: "Dynamic editorial portrait or full-body silhouette framing, generous negative space",
+    camera: "85mm prime lens, f/2.8, shallow focus falloff, natural candid elegance",
+    lighting: "Directional window light or high-end diffused strobe, natural catchlights in eyes",
+    color: "Refined editorial color grading, true textile color rendition, natural healthy skin tones",
+    texture: "Individual fabric fibers, tactile leather grain, real skin pores, authentic makeup",
+    mood: "Sophisticated, expressive, aspirational, authentic",
+    negativeConstraints: REALISTIC_NEGATIVE_CONSTRAINTS,
+  },
 
   "cinematic-realism": {
     id: "cinematic-realism",
     name: "Cinematic Realism",
-    family: "cinematic",
+    family: "realistic",
     category: "photographic",
-    description: "Photographic film plate quality. High contrast, anamorphic lens, directional key light.",
+    description: "Photographic film plate quality. High contrast, anamorphic lens, directional key light, restrained film grade.",
     compatibleMedia: ["poster", "thumbnail", "keyart", "concept-art", "social"],
-    composition: "rule-of-thirds, asymmetric, strong foreground-background depth layering",
-    camera: "35-50mm anamorphic, shallow depth of field, natural bokeh",
-    lighting: "single directional key light, deep shadows, volumetric haze, subtle rim light",
-    color: "desaturated cinematic grade, rich blacks, controlled highlights, warm-cool contrast",
-    texture: "high realism, micro-detail, film grain",
-    mood: "dramatic, narrative, tension",
-    negativeConstraints: [
-      "no generic AI glow", "no flat composition", "no plastic skin",
-      "no unnecessary objects", "no blurry artifacts", "no low resolution"
-    ],
+    composition: "Rule-of-thirds, asymmetric, strong foreground-background depth layering",
+    camera: "35-50mm anamorphic, shallow depth of field, natural bokeh, film plate exposure",
+    lighting: "Single directional key light, deep natural shadows, subtle atmospheric haze, realistic falloff",
+    color: "Desaturated cinematic film grade, rich blacks, controlled highlights, warm-cool contrast",
+    texture: "High realism, micro-detail, natural film grain, physical material wear",
+    mood: "Dramatic, narrative, tension, grounded",
+    negativeConstraints: REALISTIC_NEGATIVE_CONSTRAINTS,
   },
+
+  // ── CINEMATIC SCI-FI & NOIR ────────────────────────────────────────────────
 
   "sci-fi-cinematic": {
     id: "sci-fi-cinematic",
@@ -185,44 +292,6 @@ export const STYLE_REGISTRY = {
     ],
   },
 
-  // ── REALISTIC PHOTOGRAPHY FAMILY ──────────────────────────────────────────
-
-  "product-photography": {
-    id: "product-photography",
-    name: "Product Photography",
-    family: "realistic",
-    category: "photographic",
-    description: "Commercial studio product photography. Clean, precise, aspirational.",
-    compatibleMedia: ["asset", "poster", "social", "editorial"],
-    composition: "centered or slightly off-center, clean studio background, hero product focus",
-    camera: "medium format, 90mm macro, f/11 deep focus",
-    lighting: "softbox key light, white bounce fill, subtle rim separation",
-    color: "neutral studio whites and grays, product colors isolated and saturated",
-    texture: "ultra-sharp surface detail, specular highlights on reflective surfaces",
-    mood: "premium, desirable, trustworthy, aspirational",
-    negativeConstraints: [
-      "no busy backgrounds", "no hands", "no people", "no dramatic lighting"
-    ],
-  },
-
-  "editorial-realism": {
-    id: "editorial-realism",
-    name: "Editorial Realism",
-    family: "realistic",
-    category: "photographic",
-    description: "Magazine-quality editorial photography. Human subjects, narrative documentary style.",
-    compatibleMedia: ["poster", "thumbnail", "social", "editorial"],
-    composition: "environmental portrait, subject in context, foreground-background storytelling",
-    camera: "35mm or 50mm, natural depth of field, slightly desaturated",
-    lighting: "available light, window light, or modified natural light",
-    color: "slightly desaturated, warm editorial grade, controlled shadows",
-    texture: "natural grain, authentic textures, real environment",
-    mood: "authentic, human, documentary, thoughtful",
-    negativeConstraints: [
-      "no obvious studio lighting", "no artificial-looking skin", "no over-retouching"
-    ],
-  },
-
   // ── ILLUSTRATION FAMILY ───────────────────────────────────────────────────
 
   "modern-cartoon-3d": {
@@ -351,7 +420,7 @@ export const MEDIA_TYPES = {
     aspectRatios: ["2:3", "16:9", "3:4"],
     defaultAspect: "2:3",
     defaultSize: { width: 400, height: 600 },
-    recommendedStyles: ["cinematic-realism", "sci-fi-cinematic", "neo-noir", "luxury-editorial", "aaa-game-keyart"],
+    recommendedStyles: ["photorealistic", "cinematic-realism", "documentary-realism", "architectural-realism", "sci-fi-cinematic", "neo-noir", "luxury-editorial", "aaa-game-keyart"],
   },
   "thumbnail": {
     id: "thumbnail",
@@ -359,7 +428,7 @@ export const MEDIA_TYPES = {
     aspectRatios: ["16:9"],
     defaultAspect: "16:9",
     defaultSize: { width: 560, height: 315 },
-    recommendedStyles: ["youtube-viral", "aaa-game-keyart", "cinematic-realism", "neo-noir"],
+    recommendedStyles: ["youtube-viral", "photorealistic", "aaa-game-keyart", "cinematic-realism", "neo-noir"],
   },
   "keyart": {
     id: "keyart",
@@ -367,7 +436,7 @@ export const MEDIA_TYPES = {
     aspectRatios: ["16:9", "2:3"],
     defaultAspect: "16:9",
     defaultSize: { width: 560, height: 315 },
-    recommendedStyles: ["aaa-game-keyart", "dark-fantasy-art", "sci-fi-cinematic", "cinematic-realism"],
+    recommendedStyles: ["aaa-game-keyart", "dark-fantasy-art", "sci-fi-cinematic", "cinematic-realism", "photorealistic"],
   },
   "ui-screen": {
     id: "ui-screen",
@@ -383,7 +452,7 @@ export const MEDIA_TYPES = {
     aspectRatios: ["1:1", "3:4"],
     defaultAspect: "1:1",
     defaultSize: { width: 360, height: 360 },
-    recommendedStyles: ["gaming-macro-loot", "product-photography", "modern-cartoon-3d"],
+    recommendedStyles: ["product-photography", "studio-realism", "gaming-macro-loot", "modern-cartoon-3d"],
   },
   "social": {
     id: "social",
@@ -391,7 +460,7 @@ export const MEDIA_TYPES = {
     aspectRatios: ["1:1", "9:16", "16:9"],
     defaultAspect: "1:1",
     defaultSize: { width: 400, height: 400 },
-    recommendedStyles: ["youtube-viral", "luxury-editorial", "neo-brutalist-ui", "hyper-vibrant"],
+    recommendedStyles: ["photorealistic", "fashion-realism", "youtube-viral", "luxury-editorial", "neo-brutalist-ui", "hyper-vibrant"],
   },
   "concept-art": {
     id: "concept-art",
@@ -399,7 +468,7 @@ export const MEDIA_TYPES = {
     aspectRatios: ["16:9", "3:4"],
     defaultAspect: "16:9",
     defaultSize: { width: 560, height: 315 },
-    recommendedStyles: ["aaa-game-keyart", "dark-fantasy-art", "sci-fi-cinematic", "modern-cartoon-3d", "anime-cinematic"],
+    recommendedStyles: ["aaa-game-keyart", "dark-fantasy-art", "sci-fi-cinematic", "photorealistic", "modern-cartoon-3d", "anime-cinematic"],
   },
   "editorial": {
     id: "editorial",
@@ -407,7 +476,7 @@ export const MEDIA_TYPES = {
     aspectRatios: ["16:9", "3:4", "1:1"],
     defaultAspect: "16:9",
     defaultSize: { width: 560, height: 315 },
-    recommendedStyles: ["editorial-realism", "luxury-editorial", "cinematic-realism"],
+    recommendedStyles: ["photorealistic", "documentary-realism", "fashion-realism", "architectural-realism", "luxury-editorial", "cinematic-realism"],
   },
   "wireframe": {
     id: "wireframe",
@@ -427,23 +496,30 @@ export const MEDIA_TYPES = {
   },
 };
 
-// ── Legacy override map (backward compatibility with old styleOverride strings) ──
+// ── Legacy & Shorthand Override Map ──────────────────────────────────────────
 
 const LEGACY_OVERRIDE_MAP = {
-  "mobile_ui":   { styleId: "minimal-saas",       mediaId: "ui-screen" },
-  "gaming":      { styleId: "aaa-game-keyart",     mediaId: "keyart" },
-  "loot":        { styleId: "gaming-macro-loot",   mediaId: "asset" },
-  "cartoon":     { styleId: "modern-cartoon-3d",   mediaId: "concept-art" },
-  "vibrant":     { styleId: "hyper-vibrant",       mediaId: "social" },
-  "cinematic":   { styleId: "cinematic-realism",   mediaId: "poster" },
-  "neo-noir":    { styleId: "neo-noir",            mediaId: "poster" },
-  "sci-fi":      { styleId: "sci-fi-cinematic",    mediaId: "keyart" },
-  "anime":       { styleId: "anime-cinematic",     mediaId: "concept-art" },
-  "luxury":      { styleId: "luxury-editorial",    mediaId: "editorial" },
-  "brutalist":   { styleId: "neo-brutalist-ui",    mediaId: "ui-screen" },
-  "cybersecurity": { styleId: "cybersecurity-ui",  mediaId: "ui-screen" },
-  "youtube":     { styleId: "youtube-viral",       mediaId: "thumbnail" },
-  "product":     { styleId: "product-photography", mediaId: "asset" },
+  "realistic":     { styleId: "photorealistic",        mediaId: "poster" },
+  "photorealistic":{ styleId: "photorealistic",        mediaId: "poster" },
+  "documentary":   { styleId: "documentary-realism",   mediaId: "editorial" },
+  "studio":        { styleId: "studio-realism",        mediaId: "asset" },
+  "product":       { styleId: "product-photography",   mediaId: "asset" },
+  "architectural": { styleId: "architectural-realism", mediaId: "poster" },
+  "architecture":  { styleId: "architectural-realism", mediaId: "poster" },
+  "fashion":       { styleId: "fashion-realism",       mediaId: "editorial" },
+  "cinematic":     { styleId: "cinematic-realism",     mediaId: "poster" },
+  "mobile_ui":     { styleId: "minimal-saas",          mediaId: "ui-screen" },
+  "gaming":        { styleId: "aaa-game-keyart",       mediaId: "keyart" },
+  "loot":          { styleId: "gaming-macro-loot",     mediaId: "asset" },
+  "cartoon":       { styleId: "modern-cartoon-3d",     mediaId: "concept-art" },
+  "vibrant":       { styleId: "hyper-vibrant",         mediaId: "social" },
+  "neo-noir":      { styleId: "neo-noir",              mediaId: "poster" },
+  "sci-fi":        { styleId: "sci-fi-cinematic",      mediaId: "keyart" },
+  "anime":         { styleId: "anime-cinematic",       mediaId: "concept-art" },
+  "luxury":        { styleId: "luxury-editorial",      mediaId: "editorial" },
+  "brutalist":     { styleId: "neo-brutalist-ui",      mediaId: "ui-screen" },
+  "cybersecurity": { styleId: "cybersecurity-ui",      mediaId: "ui-screen" },
+  "youtube":       { styleId: "youtube-viral",         mediaId: "thumbnail" },
 };
 
 // ── Intent Detection for Auto-Classification ──────────────────────────────────
@@ -472,29 +548,36 @@ function detectMediaFromText(text) {
     return "concept-art";
   if (/(instagram|tiktok|social|post|story|reel)/.test(t))
     return "social";
-  if (/(architecture|diagram|flow|system|sequence|schema)/.test(t))
+  if (/(architecture|building|interior|loft|facade|room|house|fenestration)/.test(t))
+    return "poster";
+  if (/(diagram|flow|system|sequence|schema)/.test(t))
     return "diagram";
-  return "keyart";
+  return "poster";
 }
 
 function detectStyleFromText(text, mediaId) {
   const t = text.toLowerCase();
   const media = MEDIA_TYPES[mediaId];
-  if (!media) return "cinematic-realism";
+  if (!media) return "photorealistic";
 
+  if (/(luxury|gold|exclusive|haute)/.test(t)) return "luxury-editorial";
+  if (/(documentary|journalism|candid|street photography|real life|unpolished)/.test(t)) return "documentary-realism";
+  if (/(architecture|architectural|loft|building|interior design|fenestration|concrete structure)/.test(t)) return "architectural-realism";
+  if (/(fashion|vogue|model|editorial portrait|dress|outfit|fabric drape)/.test(t)) return "fashion-realism";
+  if (/(product|commercial studio|clean background|white background|packshot)/.test(t)) return "product-photography";
+  if (/(studio portrait|studio lighting|headshot|isolated subject)/.test(t)) return "studio-realism";
+  if (/(photorealistic|realistic|natural photo|real world|photograph)/.test(t)) return "photorealistic";
   if (/(noir|detective|rain|neon|city|urban|crime|thriller)/.test(t)) return "neo-noir";
-  if (/(sci.fi|space|futur|cyberpunk|cyber|robot|android|quantum)/.test(t)) return "sci-fi-cinematic";
+  if (/(sci.fi|space|futur|cyberpunk|robot|android|quantum)/.test(t)) return "sci-fi-cinematic";
   if (/(dark fantasy|souls|grimdark|medieval|ancient evil|ruins|undead)/.test(t)) return "dark-fantasy-art";
-  if (/(luxury|premium|gold|exclusive|haute|fashion|vogue)/.test(t)) return "luxury-editorial";
-  if (/(vibrant|colorful|neon|rainbow|iridescent|holographic|prismatic)/.test(t)) return "hyper-vibrant";
+  if (/(vibrant|rainbow|iridescent|holographic|prismatic)/.test(t)) return "hyper-vibrant";
   if (/(anime|manga|cel.shad|japan|mech|kaiju)/.test(t)) return "anime-cinematic";
   if (/(cartoon|pixar|disney|animated|cute|toy|3d stylized)/.test(t)) return "modern-cartoon-3d";
-  if (/(hack|security|terminal|matrix|cyber|monitor|threat)/.test(t)) return "cybersecurity-ui";
-  if (/(brutalist|raw|bold|stark|expressive|unconventional)/.test(t)) return "neo-brutalist-ui";
-  if (/(product|studio|commercial|clean|white background)/.test(t)) return "product-photography";
+  if (/(hack|security|terminal|matrix|threat)/.test(t)) return "cybersecurity-ui";
+  if (/(brutalist|raw|bold|stark|expressive)/.test(t)) return "neo-brutalist-ui";
   if (/(youtube|viral|thumbnail|ctr|clickbait)/.test(t)) return "youtube-viral";
 
-  return media.recommendedStyles[0] || "cinematic-realism";
+  return media.recommendedStyles[0] || "photorealistic";
 }
 
 // ── Style Resolver ─────────────────────────────────────────────────────────────
@@ -505,16 +588,16 @@ export function resolveStyle({ styleOverride, prompt = "", context = "", mediaOv
     const style = STYLE_REGISTRY[styleOverride];
     const media = mediaOverride && MEDIA_TYPES[mediaOverride]
       ? MEDIA_TYPES[mediaOverride]
-      : MEDIA_TYPES[style.compatibleMedia[0]] || MEDIA_TYPES["keyart"];
+      : MEDIA_TYPES[style.compatibleMedia[0]] || MEDIA_TYPES["poster"];
     return { style, media };
   }
 
-  // Priority 2: Legacy string override
+  // Priority 2: Legacy / Shorthand string override
   if (styleOverride && LEGACY_OVERRIDE_MAP[styleOverride]) {
     const { styleId, mediaId } = LEGACY_OVERRIDE_MAP[styleOverride];
     return {
       style: STYLE_REGISTRY[styleId],
-      media: MEDIA_TYPES[mediaId],
+      media: MEDIA_TYPES[mediaId] || MEDIA_TYPES["poster"],
     };
   }
 
@@ -523,43 +606,12 @@ export function resolveStyle({ styleOverride, prompt = "", context = "", mediaOv
   const mediaId = mediaOverride || detectMediaFromText(combined);
   const styleId = detectStyleFromText(combined, mediaId);
   return {
-    style: STYLE_REGISTRY[styleId] || STYLE_REGISTRY["cinematic-realism"],
-    media: MEDIA_TYPES[mediaId] || MEDIA_TYPES["keyart"],
+    style: STYLE_REGISTRY[styleId] || STYLE_REGISTRY["photorealistic"],
+    media: MEDIA_TYPES[mediaId] || MEDIA_TYPES["poster"],
   };
 }
 
 // ── Prompt Builder ─────────────────────────────────────────────────────────────
-
-export function cleanVisualSubject(text) {
-  if (!text) return "";
-  return text
-    .replace(/^###\s*\[[A-Z]+\]\s*/i, "")
-    .replace(/^\[[A-Z]+\]\s*/i, "")
-    .replace(/#[a-zA-Z0-9_-]+/g, "")
-    .replace(/\n+/g, " ")
-    .trim();
-}
-
-export function extractVisualSceneFromContext(subject, context) {
-  const cleanSubject = cleanVisualSubject(subject);
-  
-  // Extract concrete upstream physical subject if subject is an abstract metacognitive node
-  const isAbstractMeta = /(assumption|risk|gap|unknown|evaluation|workflow efficacy|intent|parameter)/i.test(cleanSubject);
-  let physicalScene = "";
-  
-  if (context) {
-    const upstreamMatch = context.match(/\[Upstream Chain:\s*([^\],]+)/i);
-    if (upstreamMatch && upstreamMatch[1]) {
-      physicalScene = cleanVisualSubject(upstreamMatch[1]);
-    }
-  }
-
-  if (isAbstractMeta && physicalScene) {
-    return `${physicalScene}. Visual nuances and elements: ${cleanSubject}`;
-  }
-  
-  return cleanSubject;
-}
 
 export function buildVisualPrompt({ subject, context, style, media, customInstructions }) {
   if (!style || !media) {
@@ -569,6 +621,8 @@ export function buildVisualPrompt({ subject, context, style, media, customInstru
   const narrative = context
     ? `Primary Subject / Concept: [${subject}]. Thematic Context: [${context}]`
     : `Primary Subject / Concept: [${subject}]`;
+
+  const isRealistic = style.family === "realistic";
 
   const parts = [
     `[STYLE: ${style.name}]`,
@@ -581,7 +635,9 @@ export function buildVisualPrompt({ subject, context, style, media, customInstru
     style.texture ? `Surface quality: ${style.texture}` : null,
     `Output format: ${media.defaultAspect} aspect ratio, ${media.defaultSize.width}x${media.defaultSize.height}px`,
     customInstructions || null,
-    `Technical quality: 8K ultra-high definition, masterwork render quality, studio production standard`,
+    isRealistic
+      ? `Realism Directive: Prioritize believable physical materials, natural environmental lighting, authentic textures, realistic human proportions, and subtle real-world imperfections without artificial perfection`
+      : `Production Standard: High visual definition, coherent render staging, studio production standard`,
     style.negativeConstraints && style.negativeConstraints.length
       ? `--no ${style.negativeConstraints.join(", --no ")}`
       : null,

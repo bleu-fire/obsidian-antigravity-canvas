@@ -326,7 +326,12 @@ class AntigravityCanvasPlugin extends Plugin {
     this.addCommand({ id: "agy-expand-rec",   name: "AGY Studio: Expand with Strategic Rec",     callback: () => this.cmdExpandRec() });
     this.addCommand({ id: "agy-generate-image", name: "AGY Studio: Generate Image (Auto Context)", callback: () => this.cmdImage() });
     this.addCommand({ id: "agy-image-picker", name: "AGY Studio: Generate Image (Choose Style...)", callback: () => this.cmdPickStyleImage() });
+    this.addCommand({ id: "agy-img-photoreal", name: "AGY Image: Photorealistic (16:9)", callback: () => this.cmdImage("photorealistic") });
     this.addCommand({ id: "agy-img-cinematic", name: "AGY Image: Cinematic Realism (16:9)", callback: () => this.cmdImage("cinematic-realism") });
+    this.addCommand({ id: "agy-img-architectural", name: "AGY Image: Architectural Realism (16:9)", callback: () => this.cmdImage("architectural-realism") });
+    this.addCommand({ id: "agy-img-documentary", name: "AGY Image: Documentary Realism (16:9)", callback: () => this.cmdImage("documentary-realism") });
+    this.addCommand({ id: "agy-img-fashion", name: "AGY Image: Fashion Realism (16:9)", callback: () => this.cmdImage("fashion-realism") });
+    this.addCommand({ id: "agy-img-product", name: "AGY Image: Product Photography (1:1)", callback: () => this.cmdImage("product-photography") });
     this.addCommand({ id: "agy-img-gaming", name: "AGY Image: AAA Game Key Art (16:9)", callback: () => this.cmdImage("aaa-game-keyart") });
     this.addCommand({ id: "agy-img-dark-fantasy", name: "AGY Image: Dark Fantasy Souls (16:9)", callback: () => this.cmdImage("dark-fantasy-art") });
     this.addCommand({ id: "agy-img-scifi", name: "AGY Image: Sci-Fi Cinematic (16:9)", callback: () => this.cmdImage("sci-fi-cinematic") });
@@ -376,7 +381,12 @@ class AntigravityCanvasPlugin extends Plugin {
           }).catch(() => this.genImage(node, null));
         }));
         menu.addItem(i => i.setTitle("AGY Image: Auto Context").setIcon("image").onClick(() => this.genImage(node)));
+        menu.addItem(i => i.setTitle("AGY Image: Photorealistic (16:9)").setIcon("camera").onClick(() => this.genImage(node, "photorealistic")));
         menu.addItem(i => i.setTitle("AGY Image: Cinematic Realism (16:9)").setIcon("film").onClick(() => this.genImage(node, "cinematic-realism")));
+        menu.addItem(i => i.setTitle("AGY Image: Architectural Realism (16:9)").setIcon("home").onClick(() => this.genImage(node, "architectural-realism")));
+        menu.addItem(i => i.setTitle("AGY Image: Documentary Realism (16:9)").setIcon("eye").onClick(() => this.genImage(node, "documentary-realism")));
+        menu.addItem(i => i.setTitle("AGY Image: Fashion Realism (16:9)").setIcon("scissors").onClick(() => this.genImage(node, "fashion-realism")));
+        menu.addItem(i => i.setTitle("AGY Image: Product Photography (1:1)").setIcon("box").onClick(() => this.genImage(node, "product-photography")));
         menu.addItem(i => i.setTitle("AGY Image: AAA Game Key Art (16:9)").setIcon("swords").onClick(() => this.genImage(node, "aaa-game-keyart")));
         menu.addItem(i => i.setTitle("AGY Image: Dark Fantasy Souls (16:9)").setIcon("skull").onClick(() => this.genImage(node, "dark-fantasy-art")));
         menu.addItem(i => i.setTitle("AGY Image: Sci-Fi Cinematic (16:9)").setIcon("rocket").onClick(() => this.genImage(node, "sci-fi-cinematic")));
