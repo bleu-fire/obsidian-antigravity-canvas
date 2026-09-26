@@ -1,64 +1,64 @@
-# 🌌 Obsidian Antigravity Canvas
+# Obsidian Antigravity Canvas
 
 <div align="center">
 
 [![GitHub Release](https://img.shields.io/github/v/release/bleu-fire/obsidian-antigravity-canvas?color=blue&style=for-the-badge)](https://github.com/bleu-fire/obsidian-antigravity-canvas/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Obsidian](https://img.shields.io/badge/Obsidian-v1.0+-7C3AED.svg?style=for-the-badge&logo=obsidian)](https://obsidian.md)
 [![Backend: Antigravity](https://img.shields.io/badge/Backend-Google%20Antigravity-4285F4.svg?style=for-the-badge&logo=google)](https://antigravity.google)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-339933.svg?style=for-the-badge&logo=node.js)](https://nodejs.org)
 
-**Turn Obsidian Canvas into an AI-augmented visual ideation studio powered by Google Antigravity (`agy`).**  
-*Zero API Keys • Zero Rate Limits • Studio-Grade 8K Imagery • 16:9 Context Wireframes • Gaming Keyart Suite*
+**High-fidelity visual ideation and spatial canvas intelligence powered by Google Antigravity (agy).**  
+*Zero API Keys • No Quota Restrictions • Studio 8K Imagery • 16:9 Context Wireframes • Gaming Keyart Suite*
 
 </div>
 
 ---
 
-## ⚡ 1-Click Universal Install
+## Quick Installation
 
-Run this single command in your terminal to set up the Bridge, Obsidian Plugin, and all AI Skills automatically:
+Execute this command in your terminal to configure the Bridge Daemon, Obsidian Plugin, and AI Reasoning Skills:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bleu-fire/obsidian-antigravity-canvas/main/install.sh | bash
 ```
 
-> **After installation**: In Obsidian, press <kbd>Ctrl</kbd> + <kbd>P</kbd> and run **`Reload app without saving`**.  
-> Look for **`AGY ready` 🟢** in your bottom status bar.
+> **Post-installation**: Open Obsidian, press <kbd>Ctrl</kbd> + <kbd>P</kbd>, and run **`Reload app without saving`**.  
+> The status bar will confirm **`AGY ready`**.
 
 ---
 
-## 🚀 Key Features
+## Core Capabilities
 
-* **🔒 Zero Cloud API Keys / No Quota Limits**: Eliminates HTTP 429 `RESOURCE_EXHAUSTED` and 404 deprecated model errors. Operates via your local authenticated Google Antigravity (`agy`) CLI daemon.
-* **🧠 Context-Aware Graph Traversal**: Automatically traverses upstream incoming edges in the Canvas graph to extract parent concepts, storylines, and root themes.
-* **📐 Dynamic 16:9 Wireframe Generation**: Right-click any card to generate a structured 16:9 editorial wireframe card with Headline, Sub-headline, Composition Specs, and **Strategic Recommendations**.
-* **🎨 5-Stage Visual Reasoning Protocol**: Analyzes semiotics, optical lighting physics (PBR shaders, Fresnel reflections, chiaroscuro), and removes cheap AI clichés before rendering.
-* **🎮 Gaming & Thumbnail Suite**: Specialized keyart for Grimdark Soulsborne, Cyberpunk Esports, and high-CTR YouTube covers with scale-contrast staging.
-* **📏 Exact Aspect Ratio Canvas Cards**:
-  * **16:9** (`560 × 315 px`) for Cinematic Scenes, Wireframes, and YouTube Thumbnails.
-  * **1:1** (`360 × 360 px`) for 3D Hardware Marks, Logos, and Legendary Loot.
-  * **3:4** (`330 × 440 px`) for Vertical Character Portraits and Posters.
-* **🛡️ Zero Coordinate Collisions**: Mathematically auto-centers child nodes relative to parent cards with clean spacing.
-* **⚡ 24-Hour Cache**: SHA-256 content-addressable local caching prevents redundant inference latency.
+* **Zero Cloud API Keys**: Eliminates HTTP 429 `RESOURCE_EXHAUSTED` and 404 service deprecation errors. Communicates locally with your authenticated Google Antigravity (`agy`) daemon.
+* **Context-Aware Graph Traversal**: Automatically follows incoming canvas edges to extract parent narrative arcs, chapter themes, and root project definitions.
+* **16:9 Editorial Wireframe Generation**: Synthesizes structured 16:9 layout cards with Headline Hooks, Sub-headlines, Composition Specifications, and Strategic Recommendations.
+* **5-Stage Visual Reasoning Protocol**: Conducts semiotic analysis, optical staging (PBR shaders, Fresnel reflections, chiaroscuro contrast), and anti-cliché quality filtering prior to rendering.
+* **Gaming & Keyart Suite**: Targeted production presets for Grimdark Soulsborne, Cyberpunk Esports, and high-CTR YouTube covers.
+* **Exact Aspect Ratio Sizing**:
+  * **16:9** (`560 x 315 px`): Cinematic compositions, editorial wireframes, and YouTube thumbnails.
+  * **1:1** (`360 x 360 px`): Industrial 3D marks, brand emblems, and legendary game loot.
+  * **3:4** (`330 x 440 px`): Vertical character portraits and editorial posters.
+* **Zero Coordinate Collisions**: Automatically centers child cards relative to their parent source nodes with standardized spacing.
+* **24-Hour Cache Layer**: Content-addressable SHA-256 local storage prevents duplicate inference latency.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
-    subgraph Obsidian["Obsidian Desktop"]
-        Canvas["Obsidian Canvas (.canvas)"]
+    subgraph Obsidian["Obsidian Desktop (Electron)"]
+        Canvas["Active Canvas (.canvas)"]
         Plugin["antigravity-canvas Plugin"]
         Vault["Vault Storage (assets/generated/)"]
         Canvas -->|"Right-Click Action"| Plugin
         Plugin -->|"vault.modify()"| Canvas
     end
 
-    subgraph BridgeDaemon["Local Bridge Server (:3099)"]
+    subgraph BridgeDaemon["Local Bridge Daemon (:3099)"]
         Server["Express REST API"]
-        Queue["P-Queue (Concurrency=2)"]
+        Queue["P-Queue Engine (Concurrency=2)"]
         Engine["Canvas Context & Visual Engine"]
         Server --> Queue --> Engine
     end
@@ -66,8 +66,8 @@ flowchart LR
     subgraph GoogleAI["Google Antigravity Backend"]
         AGY["agy CLI daemon (--print)"]
         Imagen["Gemini & Imagen 3 8K Engine"]
-        Engine -->|"spawn child_process"| AGY --> Imagen
-        AGY -->|"8K PNG"| Vault
+        Engine -->|"child_process"| AGY --> Imagen
+        AGY -->|"8K Asset"| Vault
     end
 
     Plugin -->|"HTTP POST"| Server
@@ -76,87 +76,87 @@ flowchart LR
 
 ---
 
-## 💡 How to Use in Obsidian Canvas
+## Canvas Menu Reference
 
-Right-click any node inside an active `.canvas` document:
+Right-click any node within an active `.canvas` document:
 
-| Menu Item | Action | Result |
+| Menu Item | Action | Output |
 |---|---|---|
-| **🧠 AGY Brainstorm 3 ideas** | Generates 3 contextual branches from upstream narrative | 3 color-coded connected cards |
-| **📐 AGY 16:9 Wireframe Layout** | Architects a structured 16:9 layout card with next-step advice | 560×315 px wireframe card with Specs & Strategy |
-| **💡 AGY Expand with Recommendations** | Deepens concept & recommends next asset to create | Connected expansion card with `[!TIP]` |
-| **🖼️ AGY Generate image (Auto Context)** | Auto-detects genre & renders 8K asset matching context | Embedded visual card matched to optimal ratio |
-| **🎮 AGY Style: Gaming Keyart (16:9)** | Renders AAA gaming splash art / high-CTR thumbnail | 560×315 px Unreal Engine 5 render card |
-| **⚔️ AGY Style: Legendary Loot (1:1)** | Renders macro close-up weapon or cybernetic relic | 360×360 px studio-lit item card |
-| **🎬 AGY Style: Cinematic Dramatic** | Anamorphic 50mm chiaroscuro film still | 16:9 high-contrast cinematic card |
-| **🎨 AGY Style: 3D Cartoon / Pixar** | Expressive feature-film 3D animated render | 3D stylized character or world card |
-| **🌈 AGY Style: Hyper-Vibrant Colors** | Synthwave / Chromatic neon prismatic dispersion | 16:9 ultra-vivid color harmony card |
+| **AGY: Brainstorm 3 Ideas** | Derives three contextual sub-concepts from upstream story | Three connected cards with color coding |
+| **AGY: 16:9 Wireframe Layout** | Architects a 16:9 layout card with next-step advice | 560 x 315 px card with Specs and Strategy |
+| **AGY: Expand with Recommendations** | Deepens concept and outlines next asset to create | Connected analytical card with recommendation |
+| **AGY: Generate Image (Auto Context)** | Auto-detects genre and renders 8K asset from context | Embedded visual card matched to optimal ratio |
+| **AGY: Style - Gaming Keyart (16:9)** | Generates AAA gaming splash art or thumbnail | 560 x 315 px Unreal Engine 5 render card |
+| **AGY: Style - Legendary Loot (1:1)** | Renders macro close-up weapon or cybernetic relic | 360 x 360 px studio-lit item card |
+| **AGY: Style - Cinematic Dramatic** | Generates an anamorphic 50mm chiaroscuro still | 16:9 high-contrast cinematic card |
+| **AGY: Style - 3D Cartoon (Pixar)** | Generates stylized 3D feature-film animation art | 3D stylized character or world card |
+| **AGY: Style - Hyper-Vibrant Colors** | Generates high-dynamic chromatic neon artwork | 16:9 vivid color harmony card |
 
 ---
 
-## 📁 Repository Structure
+## Directory Layout
 
 ```text
 obsidian-antigravity-canvas/
-├── install.sh                          # Universal 1-click installer
-├── README.md                           # Documentation & quickstart
+├── install.sh                          # Automated installation script
+├── README.md                           # System documentation
 ├── LICENSE                             # MIT License
 ├── docs/
-│   ├── ARCHITECTURE.md                 # Electron sandbox & bridge architecture
-│   ├── QUICKSTART.md                   # 2-minute setup guide
-│   ├── CANVAS_SIZING_GUIDE.md          # 16:9 / 1:1 / 3:4 dimension matrix
-│   └── AI_AGENT_PROMPT.md              # System prompt for Claude and AGY
-├── plugin/                             # Obsidian Plugin
-│   ├── manifest.json                   # v2.5.0 metadata
-│   ├── main.js                         # Canvas graph traversal & UI menu
-│   └── styles.css                      # Status bar indicator styles
+│   ├── ARCHITECTURE.md                 # Technical specification of the bridge
+│   ├── QUICKSTART.md                   # Setup guide and prerequisites
+│   ├── CANVAS_SIZING_GUIDE.md          # Dimensional matrix and layout math
+│   └── AI_AGENT_PROMPT.md              # Operational guide for Claude and AGY
+├── plugin/                             # Obsidian Companion Plugin
+│   ├── manifest.json                   # Plugin metadata v2.5.0
+│   ├── main.js                         # Canvas graph traversal and UI integration
+│   └── styles.css                      # Status indicator styles
 ├── bridge/                             # Local HTTP Bridge Daemon
 │   ├── server.js                       # Express REST endpoints
-│   ├── antigravity.js                  # CLI runner, prompt architect & reasoning
-│   ├── queue.js                        # Task queue & backoff
-│   ├── start.sh                        # Daemon background launcher
-│   └── package.json                    # Dependencies
+│   ├── antigravity.js                  # CLI execution, prompt synthesis, reasoning
+│   ├── queue.js                        # Request queue and backoff management
+│   ├── start.sh                        # Background process launcher
+│   └── package.json                    # Node.js dependencies
 └── skills/                             # AI Reasoning Protocols
     ├── canvas-visual-reasoning/        # 5-stage cognitive prompt synthesis
     ├── canvas-context-director/        # Graph context harvesting
-    ├── gaming-visual-engine/           # AAA Unreal Engine 5 gaming art
-    ├── gaming-thumbnail-architect/     # High-CTR YouTube thumbnail formulas
-    ├── macro-asset-artisan/            # Extreme macro loot & weapon renders
-    ├── canvas-visual-artisan/          # Aspect ratio & zero-collision layout
-    ├── thumbnail-architect/            # Cognitive psychology of thumbnails
-    ├── antigravity-brand-reasoning/    # 3D luxury brand marks & emblems
-    └── antigravity-miro-canvas/        # Miro-style spatial layout protocol
+    ├── gaming-visual-engine/           # AAA Unreal Engine 5 art direction
+    ├── gaming-thumbnail-architect/     # High-CTR thumbnail formulation
+    ├── macro-asset-artisan/            # Macro loot and relic rendering
+    ├── canvas-visual-artisan/          # Aspect ratio and layout geometry
+    ├── thumbnail-architect/            # Visual semiotics and cognitive psychology
+    ├── antigravity-brand-reasoning/    # 3D brand marks and structural emblems
+    └── antigravity-miro-canvas/        # Whiteboard spatial synthesis
 ```
 
 ---
 
-## 🤖 Instructions for AI Assistants (Claude / AGY)
+## Integration with AI Agents (Claude / AGY)
 
-If you are using **Claude**, **Google Antigravity (AGY)**, or another LLM, paste the contents of [`docs/AI_AGENT_PROMPT.md`](docs/AI_AGENT_PROMPT.md) into your chat. The AI will immediately understand the local bridge endpoints, context traversal rules, and canvas coordinate math.
+For workflows orchestrated directly by **Claude**, **Google Antigravity**, or automated scripts, provide the prompt template located in [`docs/AI_AGENT_PROMPT.md`](docs/AI_AGENT_PROMPT.md). The agent will interface directly with the bridge endpoints.
 
 ---
 
-## 🛠️ Management Commands
+## Process Management
 
-* **Check Bridge Health**:
+* **Health Check**:
   ```bash
   curl -s http://127.0.0.1:3099/health
   ```
-* **View Real-Time Logs**:
+* **View Activity Logs**:
   ```bash
   tail -f /tmp/agy-bridge.log
   ```
-* **Restart the Bridge**:
+* **Restart Bridge Daemon**:
   ```bash
   bash ~/.gemini/antigravity-bridge/bridge/start.sh
   ```
-* **Stop the Server**:
+* **Terminate Bridge Daemon**:
   ```bash
   fuser -k 3099/tcp
   ```
 
 ---
 
-## 📄 License
+## License
 
-This project is open-source under the [MIT License](LICENSE).
+This project is released under the [MIT License](LICENSE).

@@ -294,7 +294,7 @@ export async function generateWireframe({ nodeText, context }) {
     `- **Focal Anchor**: [Subject placement along the 60% golden ratio line]\n` +
     `- **Lighting & Contrast**: [Key light direction + asymmetric rim light]\n` +
     `- **Curiosity Tension**: [The unresolved visual conflict driving viewer attention]\n\n` +
-    `> 💡 **Strategic Recommendation**: [Specific next card, visual asset, or dramatic angle recommended for the next connected node]\n\n` +
+    `> **Strategic Recommendation**: [Specific next card, visual asset, or dramatic angle recommended for the next connected node]\n\n` +
     `Return ONLY the markdown text. No surrounding meta-explanations.`;
 
   const raw = await runAgy(prompt, { effort: "medium" });
@@ -317,7 +317,7 @@ export async function expandWithRecommendation({ nodeText, context }) {
     `2. Add a clear, actionable recommendation for what card or asset should be created next based on this context. ` +
     `Format:\n` +
     `[2 analytical expansion sentences]\n\n` +
-    `> 💡 **Context Recommendation**: [1-2 sentences recommending the optimal next card, visual asset, or connected angle to explore]\n\n` +
+    `> **Context Recommendation**: [1-2 sentences recommending the optimal next card, visual asset, or connected angle to explore]\n\n` +
     `Return ONLY the content. No preamble.`;
 
   const raw = await runAgy(prompt, { effort: "medium" });

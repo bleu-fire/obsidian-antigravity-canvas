@@ -44,7 +44,7 @@ Thumbnail frames simulate high-CTR video/project covers:
   - Maximum 3 to 4 words (e.g. `THE 1% LOGO SECRET`, `DO NOT DO THIS`).
   - Red / Yellow / High-contrast color preset (`color: "1"` or `"3"`).
 - **Social Proof / CTR Badge Card**:
-  - Contextual anchor (e.g. `🔒 FINTECH VAULT`, `⚡ $100K SAAS`).
+  - Contextual anchor (e.g. ` FINTECH VAULT`, `⚡ $100K SAAS`).
 - **Embedded Visual Anchor**:
   - Placed on the right third to maintain a 60/40 visual weight ratio.
 

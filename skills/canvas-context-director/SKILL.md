@@ -42,7 +42,7 @@ Never generate an image from an isolated card without understanding its position
 
 The director detects stylistic cues from the node and parent context, or applies a requested visual preset:
 
-### 🎭 Preset A: Cinematic & Dramatic (IMAX / Chiaroscuro)
+###  Preset A: Cinematic & Dramatic (IMAX / Chiaroscuro)
 * **Trigger Keywords**: `cinematic`, `dramatic`, `dark`, `movie`, `film`, `epic`, `intense`, `noir`, `shadow`
 * **Optics & Lighting**: Panavision C-Series anamorphic 50mm, f/1.4, intense chiaroscuro contrast, volumetric haze, rim lights outlining the silhouette.
 * **Palette**: Carbon black (`#080C14`), desaturated slate, single intense warm tungsten or icy-blue counter-fill.
@@ -57,7 +57,7 @@ The director detects stylistic cues from the node and parent context, or applies
 
 ---
 
-### 🎨 Preset B: 3D Cartoonic & Stylized (Pixar / Arcane / DreamWorks)
+###  Preset B: 3D Cartoonic & Stylized (Pixar / Arcane / DreamWorks)
 * **Trigger Keywords**: `cartoon`, `cartoonic`, `stylized`, `pixar`, `disney`, `animated`, `3d render`, `character`, `cute`, `arcane`
 * **Optics & Lighting**: Lush three-point studio lighting, soft key light, colorful bounce lighting, subsurface scattering on skin and materials.
 * **Palette**: Rich, expressive, warm saturated tones, stylized hand-painted PBR textures, soft ambient occlusion.
@@ -73,7 +73,7 @@ The director detects stylistic cues from the node and parent context, or applies
 
 ---
 
-### 🌈 Preset C: Hyper-Vibrant & Chromatic Color (Synthwave / Cyber / Iridescent)
+###  Preset C: Hyper-Vibrant & Chromatic Color (Synthwave / Cyber / Iridescent)
 * **Trigger Keywords**: `color`, `colorful`, `vibrant`, `neon`, `cyberpunk`, `synthwave`, `holographic`, `iridescent`, `prism`, `glow`
 * **Optics & Lighting**: High-intensity dual chromatic lighting (e.g. electric cyan + magenta violet), prismatic light refraction through crystal/glass.
 * **Palette**: High dynamic range (HDR) neon, hyper-saturated ultraviolet, deep velvet void backdrop (`#050811`) to maximize color contrast.

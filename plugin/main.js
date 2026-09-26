@@ -19,28 +19,28 @@ class AntigravityCanvasPlugin extends Plugin {
 
     this.addRibbonIcon("cpu", "Antigravity Canvas", () => this.showStatus());
 
-    this.addCommand({ id: "agy-brainstorm",     name: "AGY: Brainstorm 3 ideas",                 callback: () => this.cmdBrainstorm() });
+    this.addCommand({ id: "agy-brainstorm",     name: "AGY: Brainstorm 3 Ideas",                 callback: () => this.cmdBrainstorm() });
     this.addCommand({ id: "agy-wireframe",      name: "AGY: Create 16:9 Wireframe Card",         callback: () => this.cmdWireframe() });
     this.addCommand({ id: "agy-expand-rec",     name: "AGY: Expand with Strategic Recommendation",callback: () => this.cmdExpandRec() });
-    this.addCommand({ id: "agy-generate-image", name: "AGY: Generate image (Auto Context)",       callback: () => this.cmdImage() });
-    this.addCommand({ id: "agy-gen-gaming",     name: "AGY: Generate Gaming Keyart (16:9)",       callback: () => this.cmdImage("gaming") });
-    this.addCommand({ id: "agy-gen-loot",       name: "AGY: Generate Legendary Loot (1:1)",      callback: () => this.cmdImage("loot") });
-    this.addCommand({ id: "agy-gen-cinematic",  name: "AGY: Generate Cinematic Dramatic image",   callback: () => this.cmdImage("cinematic") });
-    this.addCommand({ id: "agy-gen-cartoon",    name: "AGY: Generate 3D Cartoon/Pixar image",     callback: () => this.cmdImage("cartoon") });
-    this.addCommand({ id: "agy-gen-vibrant",    name: "AGY: Generate Hyper-Vibrant image",        callback: () => this.cmdImage("vibrant") });
+    this.addCommand({ id: "agy-generate-image", name: "AGY: Generate Image (Auto Context)",       callback: () => this.cmdImage() });
+    this.addCommand({ id: "agy-gen-gaming",     name: "AGY: Style - Gaming Keyart (16:9)",       callback: () => this.cmdImage("gaming") });
+    this.addCommand({ id: "agy-gen-loot",       name: "AGY: Style - Legendary Loot (1:1)",       callback: () => this.cmdImage("loot") });
+    this.addCommand({ id: "agy-gen-cinematic",  name: "AGY: Style - Cinematic Dramatic",         callback: () => this.cmdImage("cinematic") });
+    this.addCommand({ id: "agy-gen-cartoon",    name: "AGY: Style - 3D Cartoon (Pixar)",         callback: () => this.cmdImage("cartoon") });
+    this.addCommand({ id: "agy-gen-vibrant",    name: "AGY: Style - Hyper-Vibrant Colors",       callback: () => this.cmdImage("vibrant") });
 
     this.registerEvent(
       this.app.workspace.on("canvas:node-menu", (menu, node) => {
         menu.addSeparator();
-        menu.addItem(i => i.setTitle("AGY  Brainstorm 3 ideas").setIcon("lightbulb").onClick(() => this.brainstorm(node)));
-        menu.addItem(i => i.setTitle("AGY  📐 16:9 Wireframe Layout").setIcon("layout").onClick(() => this.createWireframe(node)));
-        menu.addItem(i => i.setTitle("AGY  💡 Expand with Recommendations").setIcon("sparkles").onClick(() => this.expandWithRec(node)));
-        menu.addItem(i => i.setTitle("AGY  Generate image (Auto Context)").setIcon("image").onClick(() => this.genImage(node)));
-        menu.addItem(i => i.setTitle("AGY  Style: 🎮 Gaming Keyart (16:9)").setIcon("swords").onClick(() => this.genImage(node, "gaming")));
-        menu.addItem(i => i.setTitle("AGY  Style: ⚔️ Legendary Loot / Item (1:1)").setIcon("gem").onClick(() => this.genImage(node, "loot")));
-        menu.addItem(i => i.setTitle("AGY  Style: 🎬 Cinematic Dramatic").setIcon("film").onClick(() => this.genImage(node, "cinematic")));
-        menu.addItem(i => i.setTitle("AGY  Style: 🎨 3D Cartoon / Pixar").setIcon("smile").onClick(() => this.genImage(node, "cartoon")));
-        menu.addItem(i => i.setTitle("AGY  Style: 🌈 Hyper-Vibrant Colors").setIcon("sparkles").onClick(() => this.genImage(node, "vibrant")));
+        menu.addItem(i => i.setTitle("AGY: Brainstorm 3 Ideas").setIcon("lightbulb").onClick(() => this.brainstorm(node)));
+        menu.addItem(i => i.setTitle("AGY: 16:9 Wireframe Layout").setIcon("layout").onClick(() => this.createWireframe(node)));
+        menu.addItem(i => i.setTitle("AGY: Expand with Recommendations").setIcon("file-text").onClick(() => this.expandWithRec(node)));
+        menu.addItem(i => i.setTitle("AGY: Generate Image (Auto Context)").setIcon("image").onClick(() => this.genImage(node)));
+        menu.addItem(i => i.setTitle("AGY: Style - Gaming Keyart (16:9)").setIcon("swords").onClick(() => this.genImage(node, "gaming")));
+        menu.addItem(i => i.setTitle("AGY: Style - Legendary Loot (1:1)").setIcon("gem").onClick(() => this.genImage(node, "loot")));
+        menu.addItem(i => i.setTitle("AGY: Style - Cinematic Dramatic").setIcon("film").onClick(() => this.genImage(node, "cinematic")));
+        menu.addItem(i => i.setTitle("AGY: Style - 3D Cartoon (Pixar)").setIcon("smile").onClick(() => this.genImage(node, "cartoon")));
+        menu.addItem(i => i.setTitle("AGY: Style - Hyper-Vibrant Colors").setIcon("sparkles").onClick(() => this.genImage(node, "vibrant")));
       })
     );
 
@@ -135,7 +135,7 @@ class AntigravityCanvasPlugin extends Plugin {
     }
 
     if (ancestors.length === 0) return "";
-    return ancestors.join(" ➔ ");
+    return ancestors.join(" -> ");
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -151,7 +151,7 @@ class AntigravityCanvasPlugin extends Plugin {
     const canvasData = await this.readCanvas(file);
     const context = this.extractNodeContext(node, canvasData);
 
-    const n = this.say("AGY architecting 16:9 Wireframe...", 0);
+    const n = this.say("AGY: Architecting 16:9 Wireframe...", 0);
     try {
       const resp = await this.post("canvas-wireframe", { nodeText: text.trim(), context }, 90000);
       n.hide();
@@ -188,7 +188,7 @@ class AntigravityCanvasPlugin extends Plugin {
       });
 
       await this.writeCanvas(file, data);
-      this.say("16:9 Wireframe generated with Strategic Recommendation!");
+      this.say("Wireframe generated successfully.");
     } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
   }
 
@@ -203,7 +203,7 @@ class AntigravityCanvasPlugin extends Plugin {
     const canvasData = await this.readCanvas(file);
     const context = this.extractNodeContext(node, canvasData);
 
-    const n = this.say("AGY generating contextual expansion & recommendation...", 0);
+    const n = this.say("AGY: Generating contextual expansion & recommendation...", 0);
     try {
       const resp = await this.post("canvas-expand-recommend", { nodeText: text.trim(), context }, 90000);
       n.hide();
@@ -240,7 +240,7 @@ class AntigravityCanvasPlugin extends Plugin {
       });
 
       await this.writeCanvas(file, data);
-      this.say("Expansion & Recommendation added!");
+      this.say("Expansion & Recommendation added.");
     } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
   }
 
@@ -255,7 +255,7 @@ class AntigravityCanvasPlugin extends Plugin {
     const canvasData = await this.readCanvas(file);
     const context = this.extractNodeContext(node, canvasData);
 
-    const n = this.say("AGY brainstorming ideas...", 0);
+    const n = this.say("AGY: Brainstorming ideas...", 0);
     try {
       const resp = await this.post("canvas-brainstorm", { nodeText: text.trim(), context });
       n.hide();
@@ -290,7 +290,7 @@ class AntigravityCanvasPlugin extends Plugin {
       data.nodes.push(...newNodes);
       data.edges.push(...newEdges);
       await this.writeCanvas(file, data);
-      this.say(`${count} ideas added!${resp.cached ? " (cached)" : ""}`);
+      this.say(`${count} ideas added.${resp.cached ? " (cached)" : ""}`);
     } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
   }
 
@@ -309,7 +309,7 @@ class AntigravityCanvasPlugin extends Plugin {
     const vaultPath = `assets/generated/${slug}-${Date.now()}.png`;
 
     const styleName = styleOverride ? `[${styleOverride.toUpperCase()}]` : "[Auto]";
-    const n = this.say(`AGY synthesizing image ${styleName}...`, 0);
+    const n = this.say(`AGY: Synthesizing image ${styleName}...`, 0);
 
     try {
       const resp = await this.post("generate-image", {
@@ -354,7 +354,7 @@ class AntigravityCanvasPlugin extends Plugin {
       });
 
       await this.writeCanvas(file, data);
-      this.say(`Rendered: ${ratioLabel} (${cardWidth}x${cardHeight})!`);
+      this.say(`Rendered: ${ratioLabel} (${cardWidth}x${cardHeight})`);
     } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
   }
 
