@@ -1,7 +1,7 @@
 import {
   SKILL_DEFINITIONS,
   executeCognitiveSkill,
-  routeIntent
+  routeIntent,
 } from "./skills-engine.js";
 import {
   listStyles,
@@ -14,13 +14,29 @@ import {
   buildContextPackage,
   checkContextSufficiency,
   CONTEXT_LEVELS,
-  SKILL_CONTEXT_REQUIREMENTS
+  SKILL_CONTEXT_REQUIREMENTS,
 } from "./context-engine.js";
 import {
   generateVisualBrainstorm,
   refineVisualConcept,
   CREATIVE_DIMENSIONS,
 } from "./visual-brainstorm-engine.js";
+import {
+  extractVisualDNA,
+  buildVisualPromptFromDNA,
+  generateVariationsFromDNA,
+  continueSeriesFromDNA,
+  normalizeVisualDNA,
+} from "./visual-dna-analyzer.js";
+import {
+  listCustomStyles,
+  getCustomStyle,
+  saveCustomStyle,
+  deleteCustomStyle,
+  getActiveLockedStyle,
+  setActiveLockedStyle,
+  clearActiveLockedStyle,
+} from "./style-library.js";
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -32,10 +48,9 @@ import {
   expandWithRecommendation,
   generateMobileScreenWireframe,
   generateDesignSystemCard,
-  brainstormCreativeDirectorConcepts
+  brainstormCreativeDirectorConcepts,
 } from "./antigravity.js";
 import { enqueue, getStats } from "./queue.js";
-
 
 const app  = express();
 const PORT = process.env.PORT || 3099;
@@ -44,14 +59,14 @@ const AGY  = process.env.AGY_BIN || "/home/bleufire/.gemini/bin/agy";
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "2mb" }));
 app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString().slice(11,19)}] ${req.method} ${req.path}`);
+  console.log(`[${new Date().toISOString().slice(11, 19)}] ${req.method} ${req.path}`);
   next();
 });
 
 app.get("/health", (_req, res) => {
   let agyOk = false;
   try { execFileSync(AGY, ["--help"], { timeout: 3000, stdio: "pipe" }); agyOk = true; } catch {}
-  res.json({ status: "ok", version: "2.8.0", backend: "antigravity-agy", agyOk, queue: getStats() });
+  res.json({ status: "ok", version: "2.9.0", backend: "antigravity-agy", agyOk, queue: getStats() });
 });
 
 app.post("/generate-text", async (req, res) => {
@@ -72,14 +87,7 @@ app.post("/generate-image", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post("/canvas-brainstorm-director", async (req, res) => {
-  const { nodeText, context } = req.body;
-  if (!nodeText) return res.status(400).json({ error: "nodeText required" });
-  try {
-    const r = await enqueue(() => brainstormCreativeDirectorConcepts({ nodeText, context }));
-    res.json({ ok: true, ...r });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
+// ── Visual Brainstorming Endpoints ──────────────────────────────────────────
 
 app.get("/canvas-visual-brainstorm/dimensions", (_req, res) => {
   res.json({ ok: true, dimensions: CREATIVE_DIMENSIONS });
@@ -127,11 +135,198 @@ app.post("/canvas-visual-brainstorm/refine", async (req, res) => {
   }
 });
 
-app.post("/canvas-brainstorm", async (req, res) => {
+// ── Visual DNA / Build From This Style Endpoints ───────────────────────────
+
+app.post("/visual-dna/extract", async (req, res) => {
+  const { imagePath, imageDescription, context } = req.body;
+  try {
+    const result = await enqueue(() => extractVisualDNA({ imagePath, imageDescription, context }));
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post("/visual-dna/build", async (req, res) => {
+  const {
+    imagePath,
+    visualDNA: rawDNA,
+    newSubject,
+    styleOverride,
+    mediaOverride,
+    customInstructions,
+    vaultPath,
+    model,
+  } = req.body;
+
+  if (!newSubject?.trim()) {
+    return res.status(400).json({ ok: false, error: "newSubject is required" });
+  }
+
+  try {
+    let dna = rawDNA;
+    if (!dna && imagePath) {
+      const extracted = await enqueue(() => extractVisualDNA({ imagePath }));
+      dna = extracted.visualDNA;
+    }
+    if (!dna) {
+      dna = getActiveLockedStyle();
+    }
+
+    const { imagePrompt, qualityGate, style, media, content, styleProfile } = buildVisualPromptFromDNA({
+      newSubject,
+      visualDNA: dna,
+      styleOverride,
+      mediaType: mediaOverride || "keyart",
+      customInstructions,
+    });
+
+    const genResult = await enqueue(() => generateImage({
+      prompt: imagePrompt,
+      context: customInstructions,
+      styleOverride: styleOverride || style.id,
+      vaultPath,
+      model,
+    }));
+
+    res.json({
+      ok: true,
+      imagePrompt,
+      qualityGate,
+      visualDNA: styleProfile,
+      style,
+      media,
+      content,
+      ...genResult,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post("/visual-dna/series", async (req, res) => {
+  const {
+    imagePath,
+    visualDNA: rawDNA,
+    seriesName,
+    nextSceneFocus,
+    currentSeriesCount,
+    mediaType,
+    vaultPath,
+    model,
+  } = req.body;
+
+  try {
+    let dna = rawDNA;
+    if (!dna && imagePath) {
+      const extracted = await enqueue(() => extractVisualDNA({ imagePath }));
+      dna = extracted.visualDNA;
+    }
+    if (!dna) {
+      dna = getActiveLockedStyle();
+    }
+
+    const seriesResult = continueSeriesFromDNA({
+      visualDNA: dna,
+      seriesName: seriesName || "Visual Series",
+      nextSceneFocus: nextSceneFocus || "",
+      currentSeriesCount: currentSeriesCount || 1,
+      mediaType: mediaType || "keyart",
+    });
+
+    const genResult = await enqueue(() => generateImage({
+      prompt: seriesResult.imagePrompt,
+      vaultPath,
+      model,
+    }));
+
+    res.json({
+      ok: true,
+      ...seriesResult,
+      ...genResult,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post("/visual-dna/variations", async (req, res) => {
+  const {
+    imagePath,
+    visualDNA: rawDNA,
+    subject,
+    count = 3,
+    mediaType = "keyart",
+  } = req.body;
+
+  try {
+    let dna = rawDNA;
+    if (!dna && imagePath) {
+      const extracted = await enqueue(() => extractVisualDNA({ imagePath }));
+      dna = extracted.visualDNA;
+    }
+    if (!dna) {
+      dna = getActiveLockedStyle();
+    }
+
+    const result = generateVariationsFromDNA({
+      visualDNA: dna,
+      subject,
+      count,
+      mediaType,
+    });
+
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.get("/visual-dna/styles", (_req, res) => {
+  res.json({ ok: true, styles: listCustomStyles() });
+});
+
+app.post("/visual-dna/styles", (req, res) => {
+  const { visualDNA, customName } = req.body;
+  if (!visualDNA) return res.status(400).json({ ok: false, error: "visualDNA required" });
+  try {
+    const saved = saveCustomStyle(visualDNA, customName);
+    res.json({ ok: true, style: saved });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.delete("/visual-dna/styles/:id", (req, res) => {
+  const success = deleteCustomStyle(req.params.id);
+  res.json({ ok: success });
+});
+
+app.get("/visual-dna/lock", (_req, res) => {
+  const locked = getActiveLockedStyle();
+  res.json({ ok: true, locked: !!locked, style: locked });
+});
+
+app.post("/visual-dna/lock", (req, res) => {
+  const { visualDNA, lock } = req.body;
+  if (lock === false) {
+    clearActiveLockedStyle();
+    return res.json({ ok: true, locked: false, style: null });
+  }
+  if (!visualDNA) {
+    return res.status(400).json({ ok: false, error: "visualDNA required to lock" });
+  }
+  const lockedStyle = setActiveLockedStyle(visualDNA);
+  res.json({ ok: true, locked: true, style: lockedStyle });
+});
+
+// ── Studio Legacy Endpoints ──────────────────────────────────────────────────
+
+app.post("/canvas-brainstorm-director", async (req, res) => {
   const { nodeText, context } = req.body;
   if (!nodeText) return res.status(400).json({ error: "nodeText required" });
   try {
-    const r = await enqueue(() => brainstormIdeas({ nodeText, context }));
+    const r = await enqueue(() => brainstormCreativeDirectorConcepts({ nodeText, context }));
     res.json({ ok: true, ...r });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -228,8 +423,15 @@ app.get("/styles/compatible/:mediaId", (req, res) => {
 });
 
 app.post("/styles/resolve", (req, res) => {
-  const { styleOverride, mediaOverride, prompt, context } = req.body;
-  const { style, media } = resolveStyle({ styleOverride, mediaOverride, prompt, context });
+  const { styleOverride, referenceDNA, skillStyle, mediaOverride, prompt, context } = req.body;
+  const { style, media, source } = resolveStyle({
+    styleOverride,
+    referenceDNA,
+    skillStyle,
+    mediaOverride,
+    prompt,
+    context,
+  });
   res.json({
     ok: true,
     styleId: style?.id || null,
@@ -238,6 +440,7 @@ app.post("/styles/resolve", (req, res) => {
     mediaName: media?.name || null,
     aspectRatio: media?.defaultAspect || "16:9",
     dimensions: media?.defaultSize || { width: 560, height: 315 },
+    source,
   });
 });
 
@@ -308,6 +511,5 @@ app.post("/context/audit", (req, res) => {
 app.get("/stats", (_req, res) => res.json(getStats()));
 
 app.listen(PORT, "127.0.0.1", () => {
-  console.log("Antigravity Bridge v2.8.0 — http://127.0.0.1:" + PORT);
+  console.log("Antigravity Bridge v2.9.0 — http://127.0.0.1:" + PORT);
 });
-

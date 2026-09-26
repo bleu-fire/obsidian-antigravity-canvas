@@ -497,34 +497,110 @@ function detectStyleFromText(text, mediaId) {
   return media.recommendedStyles[0] || "cinematic-realism";
 }
 
-// ── Style Resolver ─────────────────────────────────────────────────────────────
+import { getActiveLockedStyle, getCustomStyle } from "./style-library.js";
 
-export function resolveStyle({ styleOverride, prompt = "", context = "", mediaOverride }) {
-  // Priority 1: Direct style registry ID
-  if (styleOverride && STYLE_REGISTRY[styleOverride]) {
-    const style = STYLE_REGISTRY[styleOverride];
+// ── Convert Visual DNA to Style Recipe ─────────────────────────────────────────
+
+export function convertVisualDNAToStyleRecipe(dna) {
+  if (!dna) return null;
+  return {
+    id: dna.id || "custom-dna",
+    name: dna.name || "Visual DNA Style",
+    family: "custom",
+    category: "dna-extracted",
+    description: dna.visualLanguage || "Extracted Visual DNA style",
+    compatibleMedia: ["poster", "thumbnail", "keyart", "concept-art", "social", "ui-screen", "asset"],
+    composition: `${dna.composition?.layout || "rule-of-thirds"}, ${dna.composition?.subjectPlacement || "focal anchor"}, ${dna.composition?.depth || "layered depth"}`,
+    camera: `${dna.camera?.perspective || "eye-level"}, ${dna.camera?.angle || ""}, ${dna.camera?.lens || "35mm prime"}, ${dna.camera?.depthOfField || ""}`,
+    lighting: `${dna.lighting?.type || "directional key light"}, ${dna.lighting?.direction || ""}, ${dna.lighting?.quality || "high contrast chiaroscuro"}, ${dna.lighting?.shadows || "deep shadows"}`,
+    color: `Dominant: [${(dna.color?.dominant || []).join(", ")}], Accents: [${(dna.color?.accent || []).join(", ")}], ${dna.color?.contrast || ""}, ${dna.color?.saturation || ""}, ${dna.colorGrading || ""}`,
+    texture: `${(dna.materials || []).join(", ")}, ${(dna.textures || []).join(", ")}`,
+    mood: dna.mood || "narrative tension",
+    negativeConstraints: dna.negativeConstraints || [
+      "no generic AI glow",
+      "no blurry artifacts",
+      "no low resolution",
+      "no plastic skin",
+    ],
+  };
+}
+
+// ── Style Resolver (Strict 6-Tier Priority) ───────────────────────────────────
+
+export function resolveStyle({
+  styleOverride,
+  referenceDNA,
+  skillStyle,
+  prompt = "",
+  context = "",
+  mediaOverride,
+}) {
+  // Priority 1: Explicit built-in style registry ID or Custom Saved Style
+  if (styleOverride) {
+    if (STYLE_REGISTRY[styleOverride]) {
+      const style = STYLE_REGISTRY[styleOverride];
+      const media = mediaOverride && MEDIA_TYPES[mediaOverride]
+        ? MEDIA_TYPES[mediaOverride]
+        : MEDIA_TYPES[style.compatibleMedia[0]] || MEDIA_TYPES["keyart"];
+      return { style, media, source: "explicit-builtin" };
+    }
+
+    const custom = getCustomStyle(styleOverride);
+    if (custom) {
+      const style = convertVisualDNAToStyleRecipe(custom);
+      const media = mediaOverride && MEDIA_TYPES[mediaOverride]
+        ? MEDIA_TYPES[mediaOverride]
+        : MEDIA_TYPES["keyart"];
+      return { style, media, source: "explicit-custom" };
+    }
+
+    // Priority 2: Legacy string override
+    if (LEGACY_OVERRIDE_MAP[styleOverride]) {
+      const { styleId, mediaId } = LEGACY_OVERRIDE_MAP[styleOverride];
+      return {
+        style: STYLE_REGISTRY[styleId],
+        media: MEDIA_TYPES[mediaId],
+        source: "legacy-override",
+      };
+    }
+  }
+
+  // Priority 3: Reference Visual DNA (e.g. Build From This Style) or Active Locked Style
+  if (referenceDNA) {
+    const style = convertVisualDNAToStyleRecipe(referenceDNA);
+    const media = mediaOverride && MEDIA_TYPES[mediaOverride]
+      ? MEDIA_TYPES[mediaOverride]
+      : MEDIA_TYPES["keyart"];
+    return { style, media, source: "reference-dna" };
+  }
+
+  const activeLock = getActiveLockedStyle();
+  if (activeLock) {
+    const style = convertVisualDNAToStyleRecipe(activeLock);
+    const media = mediaOverride && MEDIA_TYPES[mediaOverride]
+      ? MEDIA_TYPES[mediaOverride]
+      : MEDIA_TYPES["keyart"];
+    return { style, media, source: "active-lock" };
+  }
+
+  // Priority 4: Skill-specific style
+  if (skillStyle && STYLE_REGISTRY[skillStyle]) {
+    const style = STYLE_REGISTRY[skillStyle];
     const media = mediaOverride && MEDIA_TYPES[mediaOverride]
       ? MEDIA_TYPES[mediaOverride]
       : MEDIA_TYPES[style.compatibleMedia[0]] || MEDIA_TYPES["keyart"];
-    return { style, media };
+    return { style, media, source: "skill-style" };
   }
 
-  // Priority 2: Legacy string override
-  if (styleOverride && LEGACY_OVERRIDE_MAP[styleOverride]) {
-    const { styleId, mediaId } = LEGACY_OVERRIDE_MAP[styleOverride];
-    return {
-      style: STYLE_REGISTRY[styleId],
-      media: MEDIA_TYPES[mediaId],
-    };
-  }
-
-  // Priority 3: Auto-detect from prompt + context
+  // Priority 5 & 6: Auto-detect from prompt + context, or media default
   const combined = `${prompt} ${context}`;
   const mediaId = mediaOverride || detectMediaFromText(combined);
+  const media = MEDIA_TYPES[mediaId] || MEDIA_TYPES["keyart"];
   const styleId = detectStyleFromText(combined, mediaId);
   return {
     style: STYLE_REGISTRY[styleId] || STYLE_REGISTRY["cinematic-realism"],
-    media: MEDIA_TYPES[mediaId] || MEDIA_TYPES["keyart"],
+    media,
+    source: "auto-detect",
   };
 }
 
