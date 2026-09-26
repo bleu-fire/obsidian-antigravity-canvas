@@ -1,6 +1,6 @@
 /*
- * Antigravity Canvas Plugin v2.5
- * Canvas Context Director, Gaming Visual Engine & 16:9 Wireframe Architect
+ * Antigravity Canvas Plugin v2.6
+ * Canvas Context Director, Mobile UI/UX Wireframing & Gaming Visual Engine
  */
 
 const { Plugin, Notice } = require("obsidian");
@@ -20,9 +20,12 @@ class AntigravityCanvasPlugin extends Plugin {
     this.addRibbonIcon("cpu", "Antigravity Canvas", () => this.showStatus());
 
     this.addCommand({ id: "agy-brainstorm",     name: "AGY: Brainstorm 3 Ideas",                 callback: () => this.cmdBrainstorm() });
-    this.addCommand({ id: "agy-wireframe",      name: "AGY: Create 16:9 Wireframe Card",         callback: () => this.cmdWireframe() });
+    this.addCommand({ id: "agy-wireframe",      name: "AGY: 16:9 Editorial Wireframe Card",      callback: () => this.cmdWireframe() });
+    this.addCommand({ id: "agy-mobile-ui",      name: "AGY: 9:16 Mobile Screen Wireframe",       callback: () => this.cmdMobileUI() });
+    this.addCommand({ id: "agy-design-system",  name: "AGY: UI Design System Tokens Card",       callback: () => this.cmdDesignSystem() });
     this.addCommand({ id: "agy-expand-rec",     name: "AGY: Expand with Strategic Recommendation",callback: () => this.cmdExpandRec() });
     this.addCommand({ id: "agy-generate-image", name: "AGY: Generate Image (Auto Context)",       callback: () => this.cmdImage() });
+    this.addCommand({ id: "agy-gen-mobile",     name: "AGY: Style - Mobile App UI (9:16)",       callback: () => this.cmdImage("mobile_ui") });
     this.addCommand({ id: "agy-gen-gaming",     name: "AGY: Style - Gaming Keyart (16:9)",       callback: () => this.cmdImage("gaming") });
     this.addCommand({ id: "agy-gen-loot",       name: "AGY: Style - Legendary Loot (1:1)",       callback: () => this.cmdImage("loot") });
     this.addCommand({ id: "agy-gen-cinematic",  name: "AGY: Style - Cinematic Dramatic",         callback: () => this.cmdImage("cinematic") });
@@ -33,9 +36,13 @@ class AntigravityCanvasPlugin extends Plugin {
       this.app.workspace.on("canvas:node-menu", (menu, node) => {
         menu.addSeparator();
         menu.addItem(i => i.setTitle("AGY: Brainstorm 3 Ideas").setIcon("lightbulb").onClick(() => this.brainstorm(node)));
-        menu.addItem(i => i.setTitle("AGY: 16:9 Wireframe Layout").setIcon("layout").onClick(() => this.createWireframe(node)));
+        menu.addItem(i => i.setTitle("AGY: 9:16 Mobile Screen Wireframe").setIcon("smartphone").onClick(() => this.createMobileUI(node)));
+        menu.addItem(i => i.setTitle("AGY: 16:9 Editorial Wireframe").setIcon("layout").onClick(() => this.createWireframe(node)));
+        menu.addItem(i => i.setTitle("AGY: UI Design System Tokens").setIcon("palette").onClick(() => this.createDesignSystem(node)));
         menu.addItem(i => i.setTitle("AGY: Expand with Recommendations").setIcon("file-text").onClick(() => this.expandWithRec(node)));
+        menu.addSeparator();
         menu.addItem(i => i.setTitle("AGY: Generate Image (Auto Context)").setIcon("image").onClick(() => this.genImage(node)));
+        menu.addItem(i => i.setTitle("AGY: Style - Mobile App UI (9:16)").setIcon("smartphone").onClick(() => this.genImage(node, "mobile_ui")));
         menu.addItem(i => i.setTitle("AGY: Style - Gaming Keyart (16:9)").setIcon("swords").onClick(() => this.genImage(node, "gaming")));
         menu.addItem(i => i.setTitle("AGY: Style - Legendary Loot (1:1)").setIcon("gem").onClick(() => this.genImage(node, "loot")));
         menu.addItem(i => i.setTitle("AGY: Style - Cinematic Dramatic").setIcon("film").onClick(() => this.genImage(node, "cinematic")));
@@ -139,6 +146,110 @@ class AntigravityCanvasPlugin extends Plugin {
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
+
+  async createMobileUI(node) {
+    if (!this.guard()) return;
+    const text = node?.unknownData?.text || node?.text || "";
+    if (!text.trim()) return this.say("Node is empty.");
+
+    const file = this.getCanvasFile();
+    if (!file) return this.say("No active canvas file.");
+
+    const canvasData = await this.readCanvas(file);
+    const context = this.extractNodeContext(node, canvasData);
+
+    const n = this.say("AGY: Architecting 9:16 Mobile UI Screen...", 0);
+    try {
+      const resp = await this.post("canvas-mobile-ui", { nodeText: text.trim(), context }, 90000);
+      n.hide();
+      if (!resp.ok || !resp.wireframe) return this.say("Failed to construct mobile UI.");
+
+      const data = await this.readCanvas(file);
+      const px = node.x ?? 0;
+      const py = node.y ?? 0;
+      const pw = node.width ?? 250;
+      const ph = node.height ?? 60;
+
+      const cardWidth = 380;
+      const cardHeight = 680;
+
+      const mobileNode = {
+        id:     this.uid(),
+        type:   "text",
+        text:   resp.wireframe,
+        x:      px + pw + 100,
+        y:      py + (ph - cardHeight) / 2,
+        width:  cardWidth,
+        height: cardHeight,
+        color:  "5", // cyan/teal highlight
+      };
+
+      data.nodes.push(mobileNode);
+      data.edges.push({
+        id:       this.uid(),
+        fromNode: node.id,
+        fromSide: "right",
+        toNode:   mobileNode.id,
+        toSide:   "left",
+        label:    "AGY Mobile 9:16",
+      });
+
+      await this.writeCanvas(file, data);
+      this.say("9:16 Mobile Screen Wireframe generated.");
+    } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
+  }
+
+  async createDesignSystem(node) {
+    if (!this.guard()) return;
+    const text = node?.unknownData?.text || node?.text || "";
+    if (!text.trim()) return this.say("Node is empty.");
+
+    const file = this.getCanvasFile();
+    if (!file) return this.say("No active canvas file.");
+
+    const canvasData = await this.readCanvas(file);
+    const context = this.extractNodeContext(node, canvasData);
+
+    const n = this.say("AGY: Synthesizing UI Design System Tokens...", 0);
+    try {
+      const resp = await this.post("canvas-design-system", { nodeText: text.trim(), context }, 90000);
+      n.hide();
+      if (!resp.ok || !resp.system) return this.say("Failed to generate design system.");
+
+      const data = await this.readCanvas(file);
+      const px = node.x ?? 0;
+      const py = node.y ?? 0;
+      const pw = node.width ?? 250;
+      const ph = node.height ?? 60;
+
+      const cardWidth = 480;
+      const cardHeight = 380;
+
+      const dsNode = {
+        id:     this.uid(),
+        type:   "text",
+        text:   resp.system,
+        x:      px + pw + 100,
+        y:      py + (ph - cardHeight) / 2,
+        width:  cardWidth,
+        height: cardHeight,
+        color:  "2", // vibrant orange/amber
+      };
+
+      data.nodes.push(dsNode);
+      data.edges.push({
+        id:       this.uid(),
+        fromNode: node.id,
+        fromSide: "right",
+        toNode:   dsNode.id,
+        toSide:   "left",
+        label:    "Design System Tokens",
+      });
+
+      await this.writeCanvas(file, data);
+      this.say("Design System Tokens card generated.");
+    } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
+  }
 
   async createWireframe(node) {
     if (!this.guard()) return;
@@ -388,6 +499,8 @@ class AntigravityCanvasPlugin extends Plugin {
   }
 
   cmdBrainstorm()         { const n = this.getSelectedNode(); if (n) this.brainstorm(n); }
+  cmdMobileUI()           { const n = this.getSelectedNode(); if (n) this.createMobileUI(n); }
+  cmdDesignSystem()       { const n = this.getSelectedNode(); if (n) this.createDesignSystem(n); }
   cmdWireframe()          { const n = this.getSelectedNode(); if (n) this.createWireframe(n); }
   cmdExpandRec()          { const n = this.getSelectedNode(); if (n) this.expandWithRec(n); }
   cmdImage(styleOverride) { const n = this.getSelectedNode(); if (n) this.genImage(n, styleOverride); }

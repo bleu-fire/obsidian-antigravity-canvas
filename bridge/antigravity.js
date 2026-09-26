@@ -64,6 +64,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
 
   // Explicit style overrides
   if (styleOverride) {
+    if (styleOverride === "mobile_ui") return { aspectRatio: "9:16", width: 380, height: 680, styleType: "mobile_app_ui", label: "AGY Mobile UI 9:16" };
     if (styleOverride === "gaming") return { aspectRatio: "16:9", width: 560, height: 315, styleType: "gaming_keyart", label: "AGY Gaming Keyart 16:9" };
     if (styleOverride === "loot")   return { aspectRatio: "1:1", width: 360, height: 360, styleType: "gaming_macro_loot", label: "AGY Legendary Loot 1:1" };
     if (styleOverride === "cartoon") return { aspectRatio: "1:1", width: 360, height: 360, styleType: "cartoon_3d", label: "AGY 3D Cartoon" };
@@ -71,7 +72,18 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     if (styleOverride === "cinematic") return { aspectRatio: "16:9", width: 560, height: 315, styleType: "cinematic_dramatic", label: "AGY Cinematic 16:9" };
   }
 
-  // 1. Gaming Loot & Weapons (Macro 1:1)
+  // 1. Mobile UI / App Screen Detection
+  if (/(mobile|app|ui|ux|screen|dashboard|checkout|onboarding|feed|settings|profile|tabbar|ios|android)/i.test(combined)) {
+    return {
+      aspectRatio: "9:16",
+      width: 380,
+      height: 680,
+      styleType: "mobile_app_ui",
+      label: "AGY Mobile UI 9:16",
+    };
+  }
+
+  // 2. Gaming Loot & Weapons (Macro 1:1)
   if (/(loot|weapon|sword|katana|blade|dagger|shield|staff|bow|armor|relic|potion|chest|crate)/i.test(combined)) {
     return {
       aspectRatio: "1:1",
@@ -82,7 +94,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 2. Gaming Keyart / Boss / Esports / Streamer Thumbnails (16:9)
+  // 3. Gaming Keyart / Boss / Esports (16:9)
   if (/(gaming|game|esports|boss|souls|elden|darksouls|raid|dungeon|fps|shooter|speedrun|minecraft|apex|valorant)/i.test(combined)) {
     return {
       aspectRatio: "16:9",
@@ -93,7 +105,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 3. 3D Cartoon / Pixar
+  // 4. 3D Cartoon / Pixar
   if (/(cartoon|cartoonic|pixar|disney|animated|stylized|anime|cute|toy|claymation|comic)/i.test(combined)) {
     const isPortrait = /(character|portrait|figure|hero|face|person)/i.test(combined);
     return {
@@ -105,7 +117,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 4. Hyper-Vibrant / Neon / Synthwave
+  // 5. Hyper-Vibrant / Neon / Synthwave
   if (/(color|colorful|vibrant|neon|synthwave|cyberpunk|holographic|iridescent|rainbow|prismatic)/i.test(combined)) {
     return {
       aspectRatio: "16:9",
@@ -116,7 +128,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 5. 3:4 Character / Portrait
+  // 6. 3:4 Character / Portrait
   if (/(character|portrait|warrior|figure|person|face|statue|vertical|poster|model|cyborg|vampire)/i.test(combined)) {
     return {
       aspectRatio: "3:4",
@@ -127,7 +139,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 6. 1:1 Brand Mark / Hardware Object
+  // 7. 1:1 Brand Mark / Hardware Object
   if (/(logo|icon|emblem|orb|cube|badge|mark|symbol|avatar|token|monogram|asset|crystal|apple|sphere)/i.test(combined)) {
     return {
       aspectRatio: "1:1",
@@ -150,6 +162,19 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
 
 export function enhancePrompt(prompt, context, styleType) {
   const narrative = context ? `Context & Theme: [${context}]. Primary Focal Card: [${prompt}]` : prompt;
+
+  if (styleType === "mobile_app_ui") {
+    return (
+      `Award-winning modern mobile application UI/UX screen design of ${narrative}, 9:16 vertical composition. ` +
+      `Platform: iOS / Android flagship application interface. ` +
+      `Layout Structure: Clean top status bar and header with navigation actions, central hero card with high-priority metrics and interactive controls, ` +
+      `refined content feed blocks, sticky modern bottom navigation dock with active pill indicator. ` +
+      `Visual Language: Modern Dark Mode SaaS aesthetic with deep obsidian background (#0A0E1A), clean frosted glass cards (1px subtle border at 15% opacity), ` +
+      `vibrant primary accent color (#6366F1), SF Pro readable typography, generous whitespace. ` +
+      `Render: Dribbble and Behance top trending UI mockup, pristine 8k resolution, crisp vector-like edge sharpness, zero blur, zero deformed icons. ` +
+      `--no cartoon, no photograph of phone frame, no hands holding device, no blurry text, no cluttered layout`
+    );
+  }
 
   if (styleType === "gaming_keyart") {
     return (
@@ -237,16 +262,16 @@ export async function generateImage({ prompt, context, styleOverride, vaultPath,
   const relPath = vaultPath || `assets/generated/img-${Date.now()}.png`;
 
   const instruction =
-    `You are the Canvas Visual Reasoning & Context Engine adhering strictly to the canvas-visual-reasoning and gaming-visual-engine skill protocols. ` +
+    `You are the Canvas Visual Reasoning & UI/UX Design Engine adhering strictly to the ui-ux-design-master, canvas-visual-reasoning, and gaming-visual-engine protocols. ` +
     `Focal Concept Card: "${prompt}". ` +
     (context ? `Upstream Graph Context & Storyline Lineage: "${context}". ` : "") +
     `Selected Aesthetic Profile: "${styleType}" (Target Aspect Ratio: "${aspectRatio}"). ` +
-    `Execute the 5-Stage Cognitive Reasoning Loop: ` +
-    `1. Deconstruct the narrative tension and relationship between the upstream context and the node. ` +
-    `2. Formulate a bold visual metaphor with exact PBR material physics (brushed titanium, optical smoked glass, damascus steel, volumetric particles). ` +
-    `3. Establish realistic optical staging (45-degree primary key light, sharp volumetric rim light, camera lens optics). ` +
-    `4. Compose the scene with 60% negative space and golden-ratio ocular hierarchy. ` +
-    `5. Strip out cheap AI tropes and clichés (--no cartoon unless requested, no flat vector, no cheap neon, no blurry artifacts). ` +
+    `Execute the Cognitive Reasoning Loop: ` +
+    `1. Deconstruct the user problem and product goals. ` +
+    `2. Formulate clear visual hierarchy and design tokens (exact HEX colors, PBR materials, card elevation). ` +
+    `3. Establish realistic optical staging (studio lighting, UI edge definitions, screen contrast). ` +
+    `4. Format layout to target aspect ratio ("${aspectRatio}"). ` +
+    `5. Strip out cheap AI tropes and clichés (--no cartoon unless requested, no flat vector, no blurry artifacts, no hands holding phones). ` +
     `Now, call the generate_image tool with AspectRatio: "${aspectRatio}", ImageName: "canvas_art_${Date.now()}", and your deeply reasoned studio-grade prompt. ` +
     `After the image is generated, copy the resulting file to "${absPath}". ` +
     `Reply with ONLY a valid JSON object: {"savedPath": "${relPath}", "aspectRatio": "${aspectRatio}", "width": ${width}, "height": ${height}, "styleType": "${styleType}", "label": "${label}", "status": "ok"}`;
@@ -271,6 +296,81 @@ export async function generateImage({ prompt, context, styleOverride, vaultPath,
 
   cacheSet(key, finalOutput);
   return { ...finalOutput, cached: false };
+}
+
+// ── generateMobileScreenWireframe ───────────────────────────────────────────
+
+export async function generateMobileScreenWireframe({ nodeText, context }) {
+  const key = hash(`mobile_wireframe:${nodeText}:${context || ""}`);
+  const c = cacheGet(key);
+  if (c) return { wireframe: c, cached: true };
+
+  const prompt =
+    `You are the UI/UX Design Master Architect adhering strictly to the ui-ux-design-master protocol. ` +
+    `Screen Focus: "${nodeText}". ` +
+    (context ? `App Product Context: "${context}". ` : "") +
+    `Synthesize a complete, production-ready 9:16 mobile application screen architecture in clean Obsidian markdown. ` +
+    `Format:\n` +
+    `### Screen: [Screen Name] (Mobile 9:16)\n\n` +
+    `**User Goal**: [1-sentence primary job-to-be-done]\n` +
+    `**Target Platform**: iOS 18 / Material You Baseline (390 x 844 px)\n\n` +
+    `#### Layout Structure:\n` +
+    `- **Top App Bar**: [Navigation back button, screen title, profile / search action]\n` +
+    `- **Hero Card**: [Primary KPI, balance, or focal action container with high contrast]\n` +
+    `- **Content Blocks**: [2-3 grouped interactive items, list feeds, or input fields]\n` +
+    `- **Bottom Navigation / CTA**: [Sticky primary button (height: 52px, full width) OR 5-tab dock]\n\n` +
+    `#### Design Tokens Applied:\n` +
+    `- **Style**: Modern Dark Mode SaaS\n` +
+    `- **Colors**: Primary: \`#6366F1\` | Surface: \`#111827\` | Background: \`#0A0E1A\` | Border: \`rgba(255,255,255,0.08)\`\n` +
+    `- **Typography**: Inter / SF Pro (Title: 24px Bold, Body: 15px Regular, Labels: 12px Medium)\n` +
+    `- **Spacing Scale**: 8pt grid (16px screen padding, 12px item gap)\n\n` +
+    `#### UX Edge Cases & Feedback:\n` +
+    `- **Active State**: [Micro-interaction on tap, scale(0.98)]\n` +
+    `- **Empty State**: [Helpful illustration and primary onboarding recovery action]\n` +
+    `- **WCAG Accessibility**: 4.5:1 text contrast compliance verified\n\n` +
+    `Return ONLY the markdown specification without preamble.`;
+
+  const raw = await runAgy(prompt, { effort: "medium" });
+  cacheSet(key, raw);
+  return { wireframe: raw, cached: false };
+}
+
+// ── generateDesignSystemCard ────────────────────────────────────────────────
+
+export async function generateDesignSystemCard({ nodeText, context }) {
+  const key = hash(`design_system:${nodeText}:${context || ""}`);
+  const c = cacheGet(key);
+  if (c) return { system: c, cached: true };
+
+  const prompt =
+    `You are the Design System Architect following the ui-ux-design-master protocol. ` +
+    `Product / Screen Context: "${nodeText}". ` +
+    (context ? `Theme Context: "${context}". ` : "") +
+    `Synthesize a complete atomic Design System specification card in clean markdown. ` +
+    `Format:\n` +
+    `### Design System: [Brand / Product Name]\n\n` +
+    `#### 1. Color Palette (HEX):\n` +
+    `- **Primary**: \`#6366F1\` (Brand Accent)\n` +
+    `- **Background**: \`#090D16\` (Deep Canvas)\n` +
+    `- **Surface**: \`#121826\` (Card Elevation)\n` +
+    `- **Border**: \`rgba(255, 255, 255, 0.08)\` (Subtle Divider)\n` +
+    `- **Text Primary**: \`#F8FAFC\` (High Contrast)\n` +
+    `- **Text Muted**: \`#94A3B8\` (Secondary Labels)\n` +
+    `- **Semantic**: Success \`#10B981\` | Warning \`#F59E0B\` | Error \`#EF4444\`\n\n` +
+    `#### 2. Typography Hierarchy:\n` +
+    `- **Display**: 32px / 1.2 line-height / Bold\n` +
+    `- **Headings**: 22px / 1.3 line-height / SemiBold\n` +
+    `- **Body Text**: 15px / 1.5 line-height / Regular\n` +
+    `- **Micro Labels**: 12px / 1.0 line-height / Medium Uppercase (Letter-spacing: 0.05em)\n\n` +
+    `#### 3. Core Component Library:\n` +
+    `- **Primary Button**: Height 48px, radius 12px, full-width on mobile\n` +
+    `- **Card Containers**: Radius 16px, 16px internal padding, 1px contrast stroke\n` +
+    `- **Input Fields**: Height 48px, background surface, focus border 2px primary\n\n` +
+    `Return ONLY the markdown content.`;
+
+  const raw = await runAgy(prompt, { effort: "medium" });
+  cacheSet(key, raw);
+  return { system: raw, cached: false };
 }
 
 // ── generateWireframe from Context ──────────────────────────────────────────
