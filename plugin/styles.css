@@ -253,3 +253,48 @@
   background: var(--background-modifier-hover);
   border-color: var(--interactive-accent);
 }
+
+/* Context Warnings & Conflict Alerts */
+.agy-warnings-box {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid var(--text-warning);
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+}
+
+.agy-warnings-box h4 {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-warning);
+}
+
+.agy-warnings-box ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.agy-conflicts-box {
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 3px solid var(--text-error);
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+}
+
+.agy-conflicts-box h4 {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-error);
+}
+
+.agy-conflicts-box ul {
+  margin: 0;
+  padding-left: 18px;
+}

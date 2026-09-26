@@ -8,6 +8,15 @@ import {
 } from "./skills-engine.js";
 
 import {
+  CONTEXT_LEVELS,
+  SKILL_CONTEXT_REQUIREMENTS,
+  calculateRelevanceScore,
+  detectConflicts,
+  checkContextSufficiency,
+  buildContextPackage,
+} from "./context-engine.js";
+
+import {
   STYLE_REGISTRY,
   MEDIA_TYPES,
   resolveStyle,
@@ -28,6 +37,7 @@ import {
 // ============================================================================
 describe("1. Skill Registry & Cognitive Routing", () => {
   const EXPECTED_SKILL_IDS = [
+    "context",
     "brainstorm",
     "explore",
     "connect",
@@ -40,9 +50,9 @@ describe("1. Skill Registry & Cognitive Routing", () => {
     "evolve",
   ];
 
-  it("should define exactly 10 cognitive skills", () => {
+  it("should define exactly 11 cognitive skills", () => {
     const keys = Object.keys(SKILL_DEFINITIONS);
-    assert.equal(keys.length, 10, `Expected 10 skills, found ${keys.length}`);
+    assert.equal(keys.length, 11, `Expected 11 skills, found ${keys.length}`);
     for (const id of EXPECTED_SKILL_IDS) {
       assert.ok(SKILL_DEFINITIONS[id], `Missing skill definition: ${id}`);
     }
@@ -63,7 +73,7 @@ describe("1. Skill Registry & Cognitive Routing", () => {
     }
   });
 
-  it("should define prompt instructions for all 10 skills", () => {
+  it("should define prompt instructions for all 11 skills", () => {
     for (const id of EXPECTED_SKILL_IDS) {
       assert.ok(typeof SKILL_PROMPT_INSTRUCTIONS[id] === "string" && SKILL_PROMPT_INSTRUCTIONS[id].length > 10, `${id}: missing prompt instruction`);
     }
@@ -71,6 +81,10 @@ describe("1. Skill Registry & Cognitive Routing", () => {
 
   it("should correctly route natural language queries via routeIntent", () => {
     const testCases = [
+      { query: "context", expected: "context" },
+      { query: "knowledge audit", expected: "context" },
+      { query: "overview", expected: "context" },
+      { query: "understand state", expected: "context" },
       { query: "missing architecture gaps", expected: "find-gaps" },
       { query: "break down subsystems", expected: "decompose" },
       { query: "timeline plan", expected: "roadmap" },
@@ -377,3 +391,220 @@ describe("3. Canvas Validator & Output Normalization", () => {
     assert.equal(validateCanvasData({ nodes: [], edges: "not-an-array" }).valid, false);
   });
 });
+
+// ============================================================================
+// 4. Context Intelligence Engine
+// ============================================================================
+describe("4. Context Intelligence Engine", () => {
+  it("should define CONTEXT_LEVELS with 4 ascending scopes and expected metadata", () => {
+    const expectedLevels = ["selection", "local", "project", "graph"];
+    assert.deepEqual(Object.keys(CONTEXT_LEVELS), expectedLevels);
+
+    for (let i = 0; i < expectedLevels.length; i++) {
+      const id = expectedLevels[i];
+      const level = CONTEXT_LEVELS[id];
+      assert.equal(level.id, id);
+      assert.equal(level.level, i + 1);
+      assert.ok(typeof level.name === "string" && level.name.length > 0);
+      assert.ok(typeof level.description === "string" && level.description.length > 0);
+      assert.ok(Array.isArray(level.includes) && level.includes.length > 0);
+      assert.ok(typeof level.maxNodes === "number" && level.maxNodes > 0);
+      assert.ok(typeof level.includeVaultNotes === "boolean");
+      assert.ok(typeof level.includeCanvasSummary === "boolean");
+    }
+
+    assert.equal(CONTEXT_LEVELS.selection.includeVaultNotes, false);
+    assert.equal(CONTEXT_LEVELS.selection.includeCanvasSummary, false);
+    assert.equal(CONTEXT_LEVELS.local.includeVaultNotes, true);
+    assert.equal(CONTEXT_LEVELS.project.includeVaultNotes, true);
+    assert.equal(CONTEXT_LEVELS.graph.includeVaultNotes, true);
+    assert.ok(CONTEXT_LEVELS.graph.maxNodes > CONTEXT_LEVELS.project.maxNodes);
+  });
+
+  it("should define SKILL_CONTEXT_REQUIREMENTS for all skills", () => {
+    const allSkillKeys = Object.keys(SKILL_DEFINITIONS);
+    for (const skillId of allSkillKeys) {
+      const req = SKILL_CONTEXT_REQUIREMENTS[skillId];
+      assert.ok(req, `Missing context requirement for skill: ${skillId}`);
+      assert.ok(["selection", "local", "project", "graph"].includes(req.scope), `Invalid scope '${req.scope}' for ${skillId}`);
+      assert.ok(Array.isArray(req.needs) && req.needs.length > 0, `Needs must be non-empty array for ${skillId}`);
+      assert.ok(typeof req.description === "string" && req.description.length > 0, `Missing description for ${skillId}`);
+    }
+  });
+
+  it("should calculate relevance score with factors and explanatory reasons", () => {
+    // Direct selection bonus
+    const selRes = calculateRelevanceScore({
+      item: { id: "n1", text: "Database Architecture" },
+      focalText: "Other topic",
+      directSelection: true,
+    });
+    assert.ok(selRes.score >= 0.35, "Direct selection should give at least 0.35");
+    assert.ok(selRes.reasons.some(r => r.includes("Directly selected")));
+
+    // Hop distance scoring
+    const hop0Res = calculateRelevanceScore({ item: { text: "Topic" }, parentDistance: 0 });
+    const hop1Res = calculateRelevanceScore({ item: { text: "Topic" }, parentDistance: 1 });
+    const hop2Res = calculateRelevanceScore({ item: { text: "Topic" }, parentDistance: 2 });
+    const hop4Res = calculateRelevanceScore({ item: { text: "Topic" }, parentDistance: 4 });
+    assert.ok(hop0Res.score > hop1Res.score, "Hop 0 score should exceed Hop 1");
+    assert.ok(hop1Res.score > hop2Res.score, "Hop 1 score should exceed Hop 2");
+    assert.ok(hop2Res.score > hop4Res.score, "Hop 2 score should exceed Hop 4");
+
+    // Keyword overlap
+    const keywordRes = calculateRelevanceScore({
+      item: { text: "Distributed caching and Redis key-value store" },
+      focalText: "Redis caching strategies",
+    });
+    assert.ok(keywordRes.score > 0, "Keyword match should increase score");
+    assert.ok(keywordRes.reasons.some(r => r.includes("Keyword overlap") && r.includes("caching")));
+
+    // Skill-specific alignment
+    const roadmapRes = calculateRelevanceScore({
+      item: { text: "Phase 1 milestone task deliverable" },
+      focalText: "Project plan",
+      skillId: "roadmap",
+    });
+    assert.ok(roadmapRes.reasons.some(r => r.includes("Contains roadmap/task temporal concepts")));
+
+    const riskRes = calculateRelevanceScore({
+      item: { text: "Critical bottleneck and security risk" },
+      focalText: "Architecture",
+      skillId: "challenge",
+    });
+    assert.ok(riskRes.reasons.some(r => r.includes("Contains assumption/risk indicators")));
+
+    // Score boundaries
+    assert.ok(selRes.score >= 0.0 && selRes.score <= 1.0);
+    assert.ok(Array.isArray(selRes.reasons) && selRes.reasons.length > 0);
+  });
+
+  it("should detect conflicts in contradictory polarity and tech choices", () => {
+    // 1. Polarity conflict: required vs deprecated with shared keyword
+    const polarityItems = [
+      { id: "node-1", text: "PostgreSQL is required for user persistence layer", label: "DB Requirement" },
+      { id: "node-2", text: "PostgreSQL is deprecated and must not be used", label: "DB Deprecation" },
+    ];
+    const polarityConflicts = detectConflicts(polarityItems);
+    assert.ok(polarityConflicts.length > 0, "Should detect polarity contradiction");
+    assert.equal(polarityConflicts[0].type, "conflict");
+    assert.ok(polarityConflicts[0].topic.includes("Requirement vs Deprecation"));
+    assert.equal(polarityConflicts[0].sources.length, 2);
+
+    // 2. Tech choice conflict: React vs Vue
+    const techItems = [
+      { id: "note-a", text: "Build frontend client with React components", label: "Frontend Spec" },
+      { id: "note-b", text: "Vue framework chosen for client UI", label: "UI Architecture" },
+    ];
+    const techConflicts = detectConflicts(techItems);
+    assert.ok(techConflicts.length > 0, "Should detect React vs Vue contradiction");
+    assert.ok(techConflicts[0].topic.includes("Frontend Framework"));
+
+    // 3. No conflict case
+    const harmoniousItems = [
+      { id: "node-a", text: "Backend service uses Node.js and Express", label: "Backend" },
+      { id: "node-b", text: "Frontend uses Tailwind CSS for layout", label: "Styling" },
+    ];
+    const noConflicts = detectConflicts(harmoniousItems);
+    assert.equal(noConflicts.length, 0, "Harmonious items should produce 0 conflicts");
+  });
+
+  it("should evaluate context sufficiency, missing prerequisites, and quality metrics", () => {
+    // Case 1: Complete context
+    const fullRes = checkContextSufficiency({
+      skillId: "brainstorm",
+      nodeText: "Decentralized identity management",
+      canvasSummary: "Canvas with 5 identity nodes",
+      existingNodes: [{ id: "n1", text: "Identity Provider", selected: true }],
+      vaultNotes: [{ title: "OAuth Guide", content: "OAuth 2.0 flow" }],
+      contextLevel: "local",
+    });
+    assert.equal(fullRes.sufficient, true);
+    assert.equal(fullRes.missing.length, 0);
+    assert.ok(fullRes.quality.coverage >= 0.8);
+    assert.ok(fullRes.quality.relevance >= 0.7);
+    assert.ok(fullRes.quality.freshness > 0);
+
+    // Case 2: Missing focal text & empty canvas
+    const missingRes = checkContextSufficiency({
+      skillId: "roadmap",
+      nodeText: "",
+      existingNodes: [],
+      vaultNotes: [],
+      contextLevel: "project",
+    });
+    assert.equal(missingRes.sufficient, false);
+    assert.ok(missingRes.missing.includes("goal"));
+    assert.ok(missingRes.warnings.length > 0);
+    assert.ok(missingRes.quality.coverage < 1.0);
+  });
+
+  it("should build structured context package with provenance, deduplication, and compactSummary", () => {
+    const canvasData = {
+      nodes: [
+        { id: "root-1", text: "Core Service #backend #auth", selected: true, mtime: Date.now() },
+        { id: "child-1", text: "Cache Layer #backend", selected: false, mtime: Date.now() },
+        { id: "peripheral-1", text: "Unrelated Analytics #data", selected: false },
+      ],
+      edges: [
+        { id: "e1", fromNode: "root-1", toNode: "child-1" },
+      ],
+    };
+
+    const vaultNotes = [
+      {
+        id: "note-auth",
+        title: "Authentication Architecture",
+        path: "docs/auth.md",
+        content: "OAuth2 and session token handling in Core Service",
+        tags: ["#security", "#auth"],
+      },
+    ];
+
+    const pkg = buildContextPackage({
+      skillId: "brainstorm",
+      nodeText: "Core Service #backend",
+      canvasData,
+      focalNode: canvasData.nodes[0],
+      vaultNotes,
+      userPrompt: "Explore high availability patterns",
+      contextLevel: "local",
+    });
+
+    // Structure checks
+    assert.equal(pkg.skillId, "brainstorm");
+    assert.equal(pkg.contextLevel, "local");
+    assert.ok(pkg.levelDetails);
+    assert.equal(pkg.focalText, "Core Service #backend");
+    assert.equal(pkg.userPrompt, "Explore high availability patterns");
+
+    // BFS distances & scoring
+    assert.ok(Array.isArray(pkg.activeNodes) && pkg.activeNodes.length > 0);
+    const rootNode = pkg.activeNodes.find(n => n.id === "root-1");
+    assert.ok(rootNode, "Root node should be present");
+    assert.equal(rootNode.distance, 0);
+
+    const childNode = pkg.activeNodes.find(n => n.id === "child-1");
+    if (childNode) {
+      assert.equal(childNode.distance, 1);
+    }
+
+    // Provenance tracking
+    assert.ok(Array.isArray(pkg.provenance) && pkg.provenance.length >= 3);
+    assert.ok(pkg.provenance.some(p => p.sourceType === "canvas_node"));
+    assert.ok(pkg.provenance.some(p => p.sourceType === "vault_note"));
+    assert.ok(pkg.provenance.some(p => p.sourceType === "user_prompt"));
+
+    // Tags extraction & deduplication
+    assert.ok(Array.isArray(pkg.tags));
+    assert.ok(pkg.tags.includes("#backend"));
+    assert.ok(pkg.tags.includes("#auth"));
+
+    // Sufficiency & compactSummary
+    assert.ok(pkg.sufficiency);
+    assert.ok(typeof pkg.compactSummary === "string" && pkg.compactSummary.length > 0);
+    assert.ok(pkg.compactSummary.includes("Skill: brainstorm"));
+    assert.ok(pkg.compactSummary.includes("Core Service"));
+  });
+});
+

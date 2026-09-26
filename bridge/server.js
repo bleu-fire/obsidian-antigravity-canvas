@@ -10,6 +10,12 @@ import {
   resolveStyle,
 } from "./style-registry.js";
 import { validateSkillResult } from "./canvas-validator.js";
+import {
+  buildContextPackage,
+  checkContextSufficiency,
+  CONTEXT_LEVELS,
+  SKILL_CONTEXT_REQUIREMENTS
+} from "./context-engine.js";
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -182,6 +188,70 @@ app.post("/styles/resolve", (req, res) => {
     aspectRatio: media?.defaultAspect || "16:9",
     dimensions: media?.defaultSize || { width: 560, height: 315 },
   });
+});
+
+// ── Context Intelligence Endpoints ──────────────────────────────────────────
+
+app.get("/context/levels", (_req, res) => {
+  res.json({
+    ok: true,
+    levels: CONTEXT_LEVELS,
+    skillRequirements: SKILL_CONTEXT_REQUIREMENTS,
+    CONTEXT_LEVELS,
+    SKILL_CONTEXT_REQUIREMENTS,
+  });
+});
+
+app.post("/context/package", (req, res) => {
+  const {
+    skillId,
+    nodeText,
+    canvasData,
+    focalNode,
+    vaultNotes,
+    userPrompt,
+    contextLevel,
+    visualIntent,
+  } = req.body;
+  try {
+    const pkg = buildContextPackage({
+      skillId,
+      nodeText,
+      canvasData,
+      focalNode,
+      vaultNotes,
+      userPrompt,
+      contextLevel,
+      visualIntent,
+    });
+    res.json({ ok: true, package: pkg });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post("/context/audit", (req, res) => {
+  const {
+    skillId,
+    nodeText,
+    canvasSummary,
+    existingNodes,
+    vaultNotes,
+    contextLevel,
+  } = req.body;
+  try {
+    const audit = checkContextSufficiency({
+      skillId,
+      nodeText,
+      canvasSummary,
+      existingNodes,
+      vaultNotes,
+      contextLevel,
+    });
+    res.json({ ok: true, audit });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 app.get("/stats", (_req, res) => res.json(getStats()));

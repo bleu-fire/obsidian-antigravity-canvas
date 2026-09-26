@@ -11,7 +11,7 @@ const VALID_TYPES = new Set([
 const VALID_COLORS = new Set(["1", "2", "3", "4", "5", "6"]);
 
 const VALID_SKILL_IDS = new Set([
-  "brainstorm", "explore", "connect", "find-gaps", "decompose",
+  "context", "brainstorm", "explore", "connect", "find-gaps", "decompose",
   "roadmap", "challenge", "research-map", "synthesize", "evolve",
 ]);
 

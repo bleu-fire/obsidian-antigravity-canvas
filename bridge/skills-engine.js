@@ -27,6 +27,13 @@ function cacheSet(key, v) {
 }
 
 export const SKILL_DEFINITIONS = {
+  "context": {
+    name: "Context Intelligence",
+    badge: "Context",
+    description: "Understand knowledge state, rank relevance, deduplicate noise, and package context for reasoning.",
+    suggestedColor: "5",
+    nextSkills: ["brainstorm", "explore", "decompose", "roadmap", "find-gaps"],
+  },
   "brainstorm": {
     name: "Brainstorm Directions",
     badge: "Ideation",
@@ -100,6 +107,7 @@ export const SKILL_DEFINITIONS = {
 };
 
 export const SKILL_PROMPT_INSTRUCTIONS = {
+  "context": "Audit the focal topic and available canvas/vault knowledge. Extract key premises, rank relevance, detect knowledge gaps and contradictions, and package a high-signal conceptual summary.",
   "brainstorm": "Generate 3 to 5 genuinely distinct, clustered conceptual directions. For each, identify underlying assumptions, strategic trade-offs, and critical unresolved questions.",
   "explore": "Deconstruct the core subject across its constituent dimensions, semantic prerequisites, underlying mechanics, and real-world variants.",
   "connect": "Discover functional, non-obvious dependencies, potential contradictions, enabling synergies, and conceptual bridges with explicit rationale.",
@@ -165,7 +173,7 @@ ${vaultNotes.map(n => `  * [[${n.title}]]: ${n.excerpt}`).join("\n")}` : "",
     `4. Provide explicit relationships connecting the new cards to the focal node or to each other.`,
     `   Labels must be functional: "depends on", "contradicts", "enables", "evidence for", "part of", "leads to".`,
     `5. Identify any potential gaps or blind spots using measured language ("Potential gap...").`,
-    `6. Suggest 2-4 logical next skills from: ["explore", "connect", "find-gaps", "decompose", "roadmap", "challenge", "research-map", "synthesize", "evolve"].`,
+    `6. Suggest 2-4 logical next skills from: ["context", "explore", "connect", "find-gaps", "decompose", "roadmap", "challenge", "research-map", "synthesize", "evolve"].`,
     ``,
     `OUTPUT SPECIFICATION:`,
     `Return ONLY a valid JSON object matching this exact schema (no markdown formatting, no code fences):`,
@@ -261,6 +269,9 @@ ${vaultNotes.map(n => `  * [[${n.title}]]: ${n.excerpt}`).join("\n")}` : "",
 export function routeIntent({ userPrompt = "", context = "" }) {
   const p = userPrompt.toLowerCase();
 
+  if (p.includes("context") || p.includes("overview") || p.includes("understand state") || p.includes("knowledge audit") || p.includes("scope")) {
+    return { skillId: "context", confidence: 0.95, reason: "Inquiry requests knowledge state auditing and context packaging." };
+  }
   if (p.includes("gap") || p.includes("missing") || p.includes("blind spot") || p.includes("risk") || p.includes("vulnerab")) {
     return { skillId: "find-gaps", confidence: 0.95, reason: "Inquiry targets missing requirements or unstated risks." };
   }
@@ -276,7 +287,7 @@ export function routeIntent({ userPrompt = "", context = "" }) {
   if (p.includes("connect") || p.includes("relat") || p.includes("link") || p.includes("depend")) {
     return { skillId: "connect", confidence: 0.90, reason: "Inquiry seeks relationships and dependencies between cards." };
   }
-  if (p.includes("research") || p.includes("investigat") || p.includes("inquiry") || p.includes("source") || p.includes("unknown")) {
+  if (p.includes("research") || p.includes("investigat") || p.includes("source") || p.includes("unknown") || p.includes("inquir")) {
     return { skillId: "research-map", confidence: 0.90, reason: "Inquiry is an open exploration of an unfamiliar topic." };
   }
   if (p.includes("synthes") || p.includes("distill") || p.includes("summariz") || p.includes("unif")) {

@@ -11,7 +11,7 @@ const POLL   = 5000;
 // ── Skill Preview & Approval Modal ──────────────────────────────────────────
 
 class SkillPreviewModal extends Modal {
-  constructor(app, { skillId, skillName, badge, summary, reasoning, nodes, relationships, questions, gaps, nextSkills, onApply, onNextSkill }) {
+  constructor(app, { skillId, skillName, badge, summary, reasoning, nodes, relationships, questions, gaps, warnings = [], conflicts = [], nextSkills, onApply, onNextSkill }) {
     super(app);
     this.skillId = skillId;
     this.skillName = skillName;
@@ -22,6 +22,8 @@ class SkillPreviewModal extends Modal {
     this.relationships = relationships || [];
     this.questions = questions || [];
     this.gaps = gaps || [];
+    this.warnings = warnings || [];
+    this.conflicts = conflicts || [];
     this.nextSkills = nextSkills || [];
     this.onApply = onApply;
     this.onNextSkill = onNextSkill;
@@ -43,6 +45,22 @@ class SkillPreviewModal extends Modal {
     summaryBox.createEl("p", { cls: "agy-summary-title", text: this.summary });
     if (this.reasoning) {
       summaryBox.createEl("div", { cls: "agy-reasoning-text", text: this.reasoning });
+    }
+
+    // Context Warnings Notice
+    if (this.warnings && this.warnings.length > 0) {
+      const warnBox = contentEl.createDiv({ cls: "agy-warnings-box" });
+      warnBox.createEl("h4", { text: "Context Warnings" });
+      const ul = warnBox.createEl("ul");
+      this.warnings.forEach(w => ul.createEl("li", { text: w }));
+    }
+
+    // Knowledge Conflicts Detected Notice
+    if (this.conflicts && this.conflicts.length > 0) {
+      const conflictsBox = contentEl.createDiv({ cls: "agy-conflicts-box" });
+      conflictsBox.createEl("h4", { text: "Knowledge Conflicts Detected" });
+      const ul = conflictsBox.createEl("ul");
+      this.conflicts.forEach(c => ul.createEl("li", { text: c }));
     }
 
     // Potential Gaps Notice
@@ -298,6 +316,7 @@ class AntigravityCanvasPlugin extends Plugin {
     this.addCommand({ id: "agy-research-map", name: "AGY Thinking: Research Inquiry Map",       callback: () => this.cmdSkill("research-map") });
     this.addCommand({ id: "agy-synthesize",   name: "AGY Thinking: Synthesize Knowledge",       callback: () => this.cmdSkill("synthesize") });
     this.addCommand({ id: "agy-evolve",       name: "AGY Thinking: Evolve from Notes",          callback: () => this.cmdSkill("evolve") });
+    this.addCommand({ id: "agy-context",      name: "AGY Thinking: Context Intelligence Audit", callback: () => this.cmdSkill("context") });
 
     // Studio & Visuals Commands
     this.addCommand({ id: "agy-director",     name: "AGY Studio: Creative Director Concepts",   callback: () => this.cmdDirector() });
@@ -325,6 +344,7 @@ class AntigravityCanvasPlugin extends Plugin {
         menu.addItem(i => i.setTitle("AGY Thinking: Research Inquiry Map").setIcon("search").onClick(() => this.executeSkill("research-map", node)));
         menu.addItem(i => i.setTitle("AGY Thinking: Synthesize Knowledge").setIcon("layers").onClick(() => this.executeSkill("synthesize", node)));
         menu.addItem(i => i.setTitle("AGY Thinking: Evolve from Notes").setIcon("refresh-cw").onClick(() => this.executeSkill("evolve", node)));
+        menu.addItem(i => i.setTitle("AGY Thinking: Context Intelligence Audit").setIcon("scan").onClick(() => this.executeSkill("context", node)));
 
         // Group 2: Studio Visual Actions
         menu.addSeparator();
@@ -657,6 +677,8 @@ class AntigravityCanvasPlugin extends Plugin {
         relationships: resp.relationships || [],
         questions: resp.questions || [],
         gaps: resp.gaps || [],
+        warnings: resp.warnings || [],
+        conflicts: resp.conflicts || [],
         nextSkills: resp.nextSkills || [],
         onApply: async (approvedNodes, relationships) => {
           if (!approvedNodes.length) return this.say("No cards selected.");
