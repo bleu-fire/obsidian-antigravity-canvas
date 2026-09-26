@@ -1,7 +1,8 @@
 /*
- * Antigravity Canvas Plugin v2.2
- * Canvas Visual Artisan Engine
- * Dynamically sizes image cards (16:9, 1:1, 3:4) with zero-collision coordinates
+ * Antigravity Canvas Plugin v2.3
+ * Canvas Context Director & Multi-Style Visual Engine
+ * Dynamically traverses upstream canvas nodes for story context
+ * Generates: Cinematic Dramatic, 3D Cartoonic, or Hyper-Vibrant images
  */
 
 const { Plugin, Notice } = require("obsidian");
@@ -20,15 +21,21 @@ class AntigravityCanvasPlugin extends Plugin {
 
     this.addRibbonIcon("cpu", "Antigravity Canvas", () => this.showStatus());
 
-    this.addCommand({ id: "agy-brainstorm",     name: "AGY: Brainstorm 3 ideas",      callback: () => this.cmdBrainstorm() });
-    this.addCommand({ id: "agy-generate-image", name: "AGY: Generate image for node", callback: () => this.cmdImage() });
-    this.addCommand({ id: "agy-expand",         name: "AGY: Expand node text",        callback: () => this.cmdExpand() });
+    this.addCommand({ id: "agy-brainstorm",     name: "AGY: Brainstorm 3 ideas",               callback: () => this.cmdBrainstorm() });
+    this.addCommand({ id: "agy-generate-image", name: "AGY: Generate image (Auto Context)",     callback: () => this.cmdImage() });
+    this.addCommand({ id: "agy-gen-cinematic",  name: "AGY: Generate Cinematic Dramatic image", callback: () => this.cmdImage("cinematic") });
+    this.addCommand({ id: "agy-gen-cartoon",    name: "AGY: Generate 3D Cartoon/Pixar image",   callback: () => this.cmdImage("cartoon") });
+    this.addCommand({ id: "agy-gen-vibrant",    name: "AGY: Generate Hyper-Vibrant image",      callback: () => this.cmdImage("vibrant") });
+    this.addCommand({ id: "agy-expand",         name: "AGY: Expand node text",                 callback: () => this.cmdExpand() });
 
     this.registerEvent(
       this.app.workspace.on("canvas:node-menu", (menu, node) => {
         menu.addSeparator();
         menu.addItem(i => i.setTitle("AGY  Brainstorm 3 ideas").setIcon("lightbulb").onClick(() => this.brainstorm(node)));
-        menu.addItem(i => i.setTitle("AGY  Generate image (Artisan 8K)").setIcon("image").onClick(() => this.genImage(node)));
+        menu.addItem(i => i.setTitle("AGY  Generate image (Auto Context)").setIcon("image").onClick(() => this.genImage(node)));
+        menu.addItem(i => i.setTitle("AGY  Style: 🎬 Cinematic Dramatic").setIcon("film").onClick(() => this.genImage(node, "cinematic")));
+        menu.addItem(i => i.setTitle("AGY  Style: 🎨 3D Cartoon / Pixar").setIcon("smile").onClick(() => this.genImage(node, "cartoon")));
+        menu.addItem(i => i.setTitle("AGY  Style: 🌈 Hyper-Vibrant Colors").setIcon("sparkles").onClick(() => this.genImage(node, "vibrant")));
         menu.addItem(i => i.setTitle("AGY  Expand text").setIcon("pencil").onClick(() => this.expand(node)));
       })
     );
@@ -91,6 +98,44 @@ class AntigravityCanvasPlugin extends Plugin {
 
   uid() { return Math.random().toString(36).slice(2, 14); }
 
+  // ── Canvas Graph Context Traversal ────────────────────────────────────────
+
+  extractNodeContext(targetNode, canvasData) {
+    if (!canvasData || !canvasData.nodes || !canvasData.edges) return "";
+
+    const nodeMap = new Map();
+    for (const n of canvasData.nodes) {
+      if (n.id) nodeMap.set(n.id, n);
+    }
+
+    // Follow incoming edges to find parent concepts
+    const ancestors = [];
+    const directParentEdges = canvasData.edges.filter(e => e.toNode === targetNode.id);
+
+    for (const edge of directParentEdges) {
+      const parent = nodeMap.get(edge.fromNode);
+      if (parent) {
+        const text = (parent.text || parent.unknownData?.text || "").trim();
+        if (text) ancestors.push(text.replace(/\n+/g, " "));
+
+        // Look one level higher for root project theme
+        const grandParentEdges = canvasData.edges.filter(e => e.toNode === parent.id);
+        for (const gpEdge of grandParentEdges) {
+          const grandParent = nodeMap.get(gpEdge.fromNode);
+          if (grandParent) {
+            const gpText = (grandParent.text || grandParent.unknownData?.text || "").trim();
+            if (gpText && !ancestors.includes(gpText)) {
+              ancestors.unshift(gpText.replace(/\n+/g, " "));
+            }
+          }
+        }
+      }
+    }
+
+    if (ancestors.length === 0) return "";
+    return ancestors.join(" ➔ ");
+  }
+
   // ── Actions ───────────────────────────────────────────────────────────────
 
   async brainstorm(node) {
@@ -101,9 +146,12 @@ class AntigravityCanvasPlugin extends Plugin {
     const file = this.getCanvasFile();
     if (!file) return this.say("No active canvas file.");
 
-    const n = this.say("AGY brainstorming...", 0);
+    const canvasData = await this.readCanvas(file);
+    const context = this.extractNodeContext(node, canvasData);
+
+    const n = this.say("AGY brainstorming ideas...", 0);
     try {
-      const resp = await this.post("canvas-brainstorm", { nodeText: text.trim() });
+      const resp = await this.post("canvas-brainstorm", { nodeText: text.trim(), context });
       n.hide();
       if (!resp.ok || !resp.ideas?.length) return this.say("No ideas returned.");
 
@@ -140,7 +188,7 @@ class AntigravityCanvasPlugin extends Plugin {
     } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
   }
 
-  async genImage(node) {
+  async genImage(node, styleOverride = null) {
     if (!this.guard()) return;
     const text = node?.unknownData?.text || node?.text || "";
     if (!text.trim()) return this.say("Node is empty.");
@@ -148,23 +196,33 @@ class AntigravityCanvasPlugin extends Plugin {
     const file = this.getCanvasFile();
     if (!file) return this.say("No active canvas file.");
 
+    const canvasData = await this.readCanvas(file);
+    const context = this.extractNodeContext(node, canvasData);
+
     const slug      = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
     const vaultPath = `assets/generated/${slug}-${Date.now()}.png`;
-    const n         = this.say("AGY generating Artisan image...", 0);
+
+    const styleName = styleOverride ? `[${styleOverride.toUpperCase()}]` : "[Auto]";
+    const n = this.say(`AGY synthesizing image ${styleName}...`, 0);
 
     try {
-      const resp = await this.post("generate-image", { prompt: text.trim(), vaultPath }, 180000);
+      const resp = await this.post("generate-image", {
+        prompt: text.trim(),
+        context,
+        styleOverride,
+        vaultPath
+      }, 180000);
       n.hide();
       if (!resp.ok) return this.say(`Error: ${resp.error}`);
 
       const savedPath = resp.savedPath || vaultPath;
       const cardWidth = resp.width || 560;
       const cardHeight = resp.height || 315;
-      const ratioLabel = resp.aspectRatio ? `AGY ${resp.aspectRatio}` : "AGY visual";
+      const ratioLabel = resp.label || "AGY visual";
 
       const data = await this.readCanvas(file);
 
-      // Centered vertical math
+      // Centered vertical alignment
       const nodeX = node.x ?? 0;
       const nodeY = node.y ?? 0;
       const nodeW = node.width ?? 250;
@@ -191,7 +249,7 @@ class AntigravityCanvasPlugin extends Plugin {
       });
 
       await this.writeCanvas(file, data);
-      this.say(`Image rendered (${resp.aspectRatio || "16:9"} - ${cardWidth}x${cardHeight})!`);
+      this.say(`Rendered: ${ratioLabel} (${cardWidth}x${cardHeight})!`);
     } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
   }
 
@@ -203,10 +261,13 @@ class AntigravityCanvasPlugin extends Plugin {
     const file = this.getCanvasFile();
     if (!file) return this.say("No active canvas file.");
 
-    const n = this.say("AGY expanding...", 0);
+    const canvasData = await this.readCanvas(file);
+    const context = this.extractNodeContext(node, canvasData);
+
+    const n = this.say("AGY expanding text...", 0);
     try {
       const resp = await this.post("generate-text", {
-        prompt: `Expand this Obsidian canvas node into 3 rich sentences: "${text.trim()}"`,
+        prompt: `Expand this Obsidian canvas node into 3 rich sentences: "${text.trim()}". ${context ? "Theme Context: " + context : ""}`,
         effort: "medium",
       });
       n.hide();
@@ -268,9 +329,9 @@ class AntigravityCanvasPlugin extends Plugin {
     return sel[0];
   }
 
-  cmdBrainstorm() { const n = this.getSelectedNode(); if (n) this.brainstorm(n); }
-  cmdImage()      { const n = this.getSelectedNode(); if (n) this.genImage(n); }
-  cmdExpand()     { const n = this.getSelectedNode(); if (n) this.expand(n); }
+  cmdBrainstorm()         { const n = this.getSelectedNode(); if (n) this.brainstorm(n); }
+  cmdImage(styleOverride) { const n = this.getSelectedNode(); if (n) this.genImage(n, styleOverride); }
+  cmdExpand()             { const n = this.getSelectedNode(); if (n) this.expand(n); }
 }
 
 module.exports = AntigravityCanvasPlugin;

@@ -19,7 +19,7 @@ app.use((req, _res, next) => {
 app.get("/health", (_req, res) => {
   let agyOk = false;
   try { execFileSync(AGY, ["--help"], { timeout: 3000, stdio: "pipe" }); agyOk = true; } catch {}
-  res.json({ status: "ok", version: "2.0.0", backend: "antigravity-agy", agyOk, queue: getStats() });
+  res.json({ status: "ok", version: "2.3.0", backend: "antigravity-agy", agyOk, queue: getStats() });
 });
 
 app.post("/generate-text", async (req, res) => {
@@ -32,10 +32,10 @@ app.post("/generate-text", async (req, res) => {
 });
 
 app.post("/generate-image", async (req, res) => {
-  const { prompt, vaultPath, model } = req.body;
+  const { prompt, context, styleOverride, vaultPath, model } = req.body;
   if (!prompt) return res.status(400).json({ error: "prompt required" });
   try {
-    const r = await enqueue(() => generateImage({ prompt, vaultPath, model }));
+    const r = await enqueue(() => generateImage({ prompt, context, styleOverride, vaultPath, model }));
     res.json({ ok: true, ...r });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -52,5 +52,5 @@ app.post("/canvas-brainstorm", async (req, res) => {
 app.get("/stats", (_req, res) => res.json(getStats()));
 
 app.listen(PORT, "127.0.0.1", () => {
-  console.log("Antigravity Bridge v2.0 — http://127.0.0.1:" + PORT);
+  console.log("Antigravity Bridge v2.3.0 — http://127.0.0.1:" + PORT);
 });
