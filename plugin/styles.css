@@ -1,0 +1,19 @@
+/* Antigravity Canvas Plugin Styles */
+
+.canvas-node[data-antigravity="true"] {
+  border: 2px solid #0066ff !important;
+  box-shadow: 0 4px 24px rgba(0, 102, 255, 0.28) !important;
+}
+
+.antigravity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(0, 102, 255, 0.15);
+  color: #3b82f6;
+}
