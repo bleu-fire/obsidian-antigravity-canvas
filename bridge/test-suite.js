@@ -32,6 +32,14 @@ import {
   validateCanvasData,
 } from "./canvas-validator.js";
 
+import {
+  generateVisualBrainstorm,
+  refineVisualConcept,
+  CREATIVE_DIMENSIONS,
+  VISUAL_LAYERS,
+  clearBrainstormCache,
+} from "./visual-brainstorm-engine.js";
+
 // ============================================================================
 // 1. Skill Registry & Intent Routing
 // ============================================================================
@@ -607,4 +615,155 @@ describe("4. Context Intelligence Engine", () => {
     assert.ok(pkg.compactSummary.includes("Core Service"));
   });
 });
+
+// ============================================================================
+// 5. Visual Brainstorm Engine & 7-Layer Architecture
+// ============================================================================
+describe("5. Visual Brainstorm Engine & 7-Layer Architecture", () => {
+  it("should define exactly 5 creative dimensions and 7 visual layers", () => {
+    assert.equal(CREATIVE_DIMENSIONS.length, 5);
+    const expectedDimKeys = ["A", "B", "C", "D", "E"];
+    for (let i = 0; i < 5; i++) {
+      assert.equal(CREATIVE_DIMENSIONS[i].key, expectedDimKeys[i]);
+      assert.ok(CREATIVE_DIMENSIONS[i].name);
+      assert.ok(CREATIVE_DIMENSIONS[i].description);
+    }
+
+    assert.ok(VISUAL_LAYERS.layer1 && VISUAL_LAYERS.layer1.id === "subject");
+    assert.ok(VISUAL_LAYERS.layer2 && VISUAL_LAYERS.layer2.id === "secondaryElements");
+    assert.ok(VISUAL_LAYERS.layer3 && VISUAL_LAYERS.layer3.id === "materials");
+    assert.ok(VISUAL_LAYERS.layer4 && VISUAL_LAYERS.layer4.id === "environment");
+    assert.ok(VISUAL_LAYERS.layer5 && VISUAL_LAYERS.layer5.id === "lighting");
+    assert.ok(VISUAL_LAYERS.layer6 && VISUAL_LAYERS.layer6.id === "camera");
+    assert.ok(VISUAL_LAYERS.layer7 && VISUAL_LAYERS.layer7.id === "composition");
+  });
+
+  it("should generate 5 structured concepts adhering to 7-layer visual detail architecture", async () => {
+    clearBrainstormCache();
+
+    const result = await generateVisualBrainstorm({
+      nodeText: "Autonomous Cyber Sentinel #security",
+      context: "Decentralized mesh security daemon guarding kernel memory",
+      styleOverride: "cybersecurity-ui",
+      mediaOverride: "keyart",
+      userPrompt: "Emphasize defensive perimeter and real-time threat neutralization",
+      vaultNotes: [
+        { title: "Security Architecture", excerpt: "Kernel isolation with zero-trust validation" },
+      ],
+      timeout: 100,
+    });
+
+    assert.equal(result.ok, true);
+    assert.ok(Array.isArray(result.directions));
+    assert.equal(result.directions.length, 5);
+    assert.ok(Array.isArray(result.concepts));
+    assert.equal(result.concepts.length, 5);
+    assert.ok(result.recommendations);
+    assert.ok(result.recommendations.primaryConcept);
+
+    // Verify each concept satisfies all 7 visual layers and metadata
+    for (const concept of result.concepts) {
+      assert.ok(concept.title, "Missing title");
+      assert.ok(concept.concept, "Missing concept dimension name");
+      assert.ok(concept.visualStory, "Missing visualStory");
+      assert.ok(concept.visualMetaphor, "Missing visualMetaphor");
+
+      // 7-Layer Architecture verification:
+      // Layer 1: Main Subject
+      assert.ok(typeof concept.subject === "string" && concept.subject.length > 5, "Layer 1: subject missing");
+      // Layer 2: Secondary Elements & Details
+      assert.ok(Array.isArray(concept.details) && concept.details.length > 0, "Layer 2: details array missing");
+      // Layer 3: Material Detail
+      assert.ok(typeof concept.materials === "string" && concept.materials.length > 5, "Layer 3: materials missing");
+      // Layer 4: Environmental Detail
+      assert.ok(typeof concept.environment === "string" && concept.environment.length > 5, "Layer 4: environment missing");
+      // Layer 5: Lighting
+      assert.ok(typeof concept.lighting === "string" && concept.lighting.length > 5, "Layer 5: lighting missing");
+      // Layer 6: Camera & Lens
+      assert.ok(typeof concept.camera === "string" && concept.camera.length > 3, "Layer 6: camera missing");
+      assert.ok(typeof concept.lens === "string" && concept.lens.length > 3, "Layer 6: lens missing");
+      // Layer 7: Composition
+      assert.ok(typeof concept.composition === "string" && concept.composition.length > 5, "Layer 7: composition missing");
+
+      // Additional visual fields
+      assert.ok(concept.colorPalette, "Missing colorPalette");
+      assert.ok(concept.depth, "Missing depth");
+      assert.ok(concept.atmosphere, "Missing atmosphere");
+
+      // Style & Media bindings
+      assert.ok(concept.style && concept.style.id, "Missing style binding");
+      assert.ok(concept.media && concept.media.id && concept.media.defaultAspect, "Missing media binding");
+      assert.ok(Array.isArray(concept.negativeConstraints), "Missing negativeConstraints array");
+
+      // Image Prompt verification
+      assert.ok(typeof concept.imagePrompt === "string" && concept.imagePrompt.length > 20, "Missing imagePrompt");
+      assert.ok(concept.imagePrompt.includes("[STYLE:"), "imagePrompt must include style header");
+      assert.ok(concept.imagePrompt.includes("--no"), "imagePrompt must include negative constraints");
+    }
+  });
+
+  it("should serve results from SHA-256 cache on subsequent identical requests", async () => {
+    const params = {
+      nodeText: "Quantum Neural Supercomputer",
+      context: "High density quantum logic core",
+      styleOverride: "sci-fi-cinematic",
+      mediaOverride: "poster",
+      timeout: 100,
+    };
+
+    const firstRun = await generateVisualBrainstorm(params);
+    assert.equal(firstRun.ok, true);
+    assert.equal(firstRun.cached, false);
+
+    const secondRun = await generateVisualBrainstorm(params);
+    assert.equal(secondRun.ok, true);
+    assert.equal(secondRun.cached, true);
+    assert.equal(secondRun.concepts.length, 5);
+  });
+
+  it("should refine visual concept while preserving core identity and updating prompt", async () => {
+    const brainstormResult = await generateVisualBrainstorm({
+      nodeText: "Cloud Infrastructure Gateway",
+      styleOverride: "cinematic-realism",
+      mediaOverride: "keyart",
+      timeout: 100,
+    });
+
+    const baseConcept = brainstormResult.concepts[1]; // Concept B: Bold & High-Contrast
+    const originalSubject = baseConcept.subject;
+    const originalMetaphor = baseConcept.visualMetaphor;
+
+    const refined = refineVisualConcept({
+      baseConcept,
+      refinementInstructions: "Make it dramatically darker with neon reflections and heavy rain",
+      styleOverride: "neo-noir",
+      lightingOverride: "High-contrast chiaroscuro with neon magenta rim flare",
+      compositionOverride: "Dutch angle low elevation 60-40 rule",
+      environmentOverride: "Rain-drenched cyber alleyway with puddles reflecting holographic signage",
+    });
+
+    assert.equal(refined.ok, true);
+    assert.ok(refined.concept);
+
+    // Core Identity Preserved
+    assert.equal(refined.concept.subject, originalSubject);
+    assert.equal(refined.concept.visualMetaphor, originalMetaphor);
+    assert.equal(refined.concept.concept, baseConcept.concept);
+
+    // Explicit Overrides Applied
+    assert.equal(refined.concept.lighting, "High-contrast chiaroscuro with neon magenta rim flare");
+    assert.equal(refined.concept.composition, "Dutch angle low elevation 60-40 rule");
+    assert.equal(refined.concept.environment, "Rain-drenched cyber alleyway with puddles reflecting holographic signage");
+    assert.equal(refined.concept.style.id, "neo-noir");
+
+    // Negative constraints updated to neo-noir
+    assert.ok(refined.concept.negativeConstraints.length > 0);
+
+    // Image Prompt rebuilt with neo-noir style
+    assert.ok(refined.concept.imagePrompt.includes("[STYLE: Neo-Noir]"));
+    assert.ok(refined.concept.imagePrompt.includes("Dutch angle"));
+    assert.ok(refined.concept.imagePrompt.includes("neon magenta rim flare"));
+  });
+});
+
 

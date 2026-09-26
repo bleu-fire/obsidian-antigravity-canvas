@@ -285,6 +285,152 @@ class StylePickerModal extends Modal {
   }
 }
 
+// ── Refine Prompt Modal ─────────────────────────────────────────────────────
+
+class RefinePromptModal extends Modal {
+  constructor(app, title, promptText, onSubmit) {
+    super(app);
+    this.modalTitle = title;
+    this.promptText = promptText;
+    this.onSubmit = onSubmit;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("agy-modal-container");
+
+    contentEl.createEl("h2", { text: this.modalTitle });
+    contentEl.createEl("p", { cls: "mod-muted", text: this.promptText });
+
+    const input = contentEl.createEl("textarea", {
+      cls: "agy-router-textarea",
+      placeholder: "e.g., Make the lighting darker and more moody, add rain reflections, switch style to Anime Cinematic..."
+    });
+    input.rows = 3;
+
+    const footer = contentEl.createDiv({ cls: "agy-modal-footer" });
+    const cancelBtn = footer.createEl("button", { text: "Cancel" });
+    cancelBtn.onclick = () => this.close();
+
+    const submitBtn = footer.createEl("button", { cls: "mod-cta", text: "Refine Concept" });
+    submitBtn.onclick = () => {
+      const val = input.value.trim();
+      if (!val) return;
+      this.close();
+      if (this.onSubmit) this.onSubmit(val);
+    };
+  }
+
+  onClose() {
+    this.contentEl.empty();
+  }
+}
+
+// ── Advanced Visual Brainstorming Modal ─────────────────────────────────────
+
+class VisualBrainstormModal extends Modal {
+  constructor(app, options) {
+    super(app);
+    this.focalText = options.focalText || "";
+    this.concepts = options.concepts || [];
+    this.directions = options.directions || [];
+    this.recommendations = options.recommendations || {};
+    this.onApplyConcept = options.onApplyConcept;
+    this.onGenerateImage = options.onGenerateImage;
+    this.onRefine = options.onRefine;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("agy-modal-container", "agy-vbrain-modal");
+
+    const header = contentEl.createDiv({ cls: "agy-modal-header" });
+    header.createEl("h2", { text: "AGY Studio: Advanced Visual Brainstorming" });
+    header.createSpan({ cls: "agy-badge", text: "5 Directions" });
+
+    contentEl.createEl("p", {
+      cls: "mod-muted",
+      text: `Creative Directions and 7-Layer Visual Concepts for: "${this.focalText}"`,
+    });
+
+    const list = contentEl.createDiv({ cls: "agy-vbrain-list" });
+
+    this.concepts.forEach((c, idx) => {
+      const card = list.createDiv({ cls: "agy-vbrain-card" });
+
+      const top = card.createDiv({ cls: "agy-vbrain-top" });
+      top.createEl("h3", { cls: "agy-vbrain-title", text: `${c.title || `Concept ${idx + 1}`}` });
+      top.createSpan({ cls: "agy-badge", text: (c.dimensionId || c.concept || "").replace(/^concept-[a-e]:?\s*/i, "").toUpperCase() });
+
+      if (c.visualMetaphor) {
+        card.createDiv({ cls: "agy-vbrain-metaphor", text: `Metaphor: ${c.visualMetaphor}` });
+      }
+
+      if (c.visualStory) {
+        card.createDiv({ cls: "agy-vbrain-story", text: c.visualStory });
+      }
+
+      // 7-Layer Visual Detail Architecture Grid
+      const grid = card.createDiv({ cls: "agy-vbrain-layers-grid" });
+
+      const addLayer = (label, val) => {
+        if (!val) return;
+        const item = grid.createDiv({ cls: "agy-vbrain-layer-item" });
+        item.createSpan({ cls: "agy-vbrain-layer-label", text: label });
+        item.createSpan({ cls: "agy-vbrain-layer-val", text: val });
+      };
+
+      addLayer("Subject (L1)", c.subject);
+      addLayer("Lighting (L5)", c.lighting);
+      addLayer("Camera & Lens (L6)", `${c.camera || ""}${c.lens ? ` (${c.lens})` : ""}`);
+      addLayer("Composition (L7)", c.composition);
+      addLayer("Materials (L3)", c.materials);
+      addLayer("Environment (L4)", c.environment);
+      addLayer("Palette", c.colorPalette);
+
+      if (c.imagePrompt) {
+        const promptPreview = card.createDiv({ cls: "agy-vbrain-prompt-preview" });
+        promptPreview.setText(c.imagePrompt);
+      }
+
+      const actions = card.createDiv({ cls: "agy-vbrain-card-actions" });
+
+      const addBtn = actions.createEl("button", { text: "Add to Canvas" });
+      addBtn.onclick = () => {
+        if (this.onApplyConcept) this.onApplyConcept(c, idx);
+      };
+
+      const imgBtn = actions.createEl("button", { cls: "mod-cta", text: "Generate Image" });
+      imgBtn.onclick = () => {
+        if (this.onGenerateImage) this.onGenerateImage(c);
+      };
+
+      const refineBtn = actions.createEl("button", { text: "Refine..." });
+      refineBtn.onclick = () => {
+        if (this.onRefine) this.onRefine(c);
+      };
+    });
+
+    const footer = contentEl.createDiv({ cls: "agy-modal-footer" });
+    const closeBtn = footer.createEl("button", { text: "Close" });
+    closeBtn.onclick = () => this.close();
+
+    const addAllBtn = footer.createEl("button", { cls: "mod-cta", text: "Add All 5 Concepts to Canvas" });
+    addAllBtn.onclick = () => {
+      this.close();
+      if (this.onApplyConcept) {
+        this.concepts.forEach((c, i) => this.onApplyConcept(c, i));
+      }
+    };
+  }
+
+  onClose() {
+    this.contentEl.empty();
+  }
+}
+
 // ── Main Plugin Class ───────────────────────────────────────────────────────
 
 class AntigravityCanvasPlugin extends Plugin {
@@ -319,6 +465,7 @@ class AntigravityCanvasPlugin extends Plugin {
     this.addCommand({ id: "agy-context",      name: "AGY Thinking: Context Intelligence Audit", callback: () => this.cmdSkill("context") });
 
     // Studio & Visuals Commands
+    this.addCommand({ id: "agy-visual-brainstorm", name: "AGY Studio: Advanced Visual Brainstorming (5 Directions)", callback: () => this.cmdVisualBrainstorm() });
     this.addCommand({ id: "agy-director",     name: "AGY Studio: Creative Director Concepts",   callback: () => this.cmdDirector() });
     this.addCommand({ id: "agy-wireframe",    name: "AGY Studio: 16:9 Editorial Wireframe",     callback: () => this.cmdWireframe() });
     this.addCommand({ id: "agy-mobile-ui",    name: "AGY Studio: 9:16 Mobile UI Screen",        callback: () => this.cmdMobileUI() });
@@ -348,6 +495,7 @@ class AntigravityCanvasPlugin extends Plugin {
 
         // Group 2: Studio Visual Actions
         menu.addSeparator();
+        menu.addItem(i => i.setTitle("AGY Studio: Visual Brainstorm (5 Directions)").setIcon("sparkles").onClick(() => this.visualBrainstorm(node)));
         menu.addItem(i => i.setTitle("AGY Studio: Creative Director Concepts").setIcon("compass").onClick(() => this.brainstormDirector(node)));
         menu.addItem(i => i.setTitle("AGY Studio: 9:16 Mobile UI Screen").setIcon("smartphone").onClick(() => this.createMobileUI(node)));
         menu.addItem(i => i.setTitle("AGY Studio: 16:9 Editorial Wireframe").setIcon("layout").onClick(() => this.createWireframe(node)));
@@ -1084,6 +1232,190 @@ class AntigravityCanvasPlugin extends Plugin {
     } catch (e) { n.hide(); this.say(`Error: ${e.message}`); }
   }
 
+  // ── Advanced Visual Brainstorming ─────────────────────────────────────────
+
+  async visualBrainstorm(node, styleOverride = null, userPrompt = null) {
+    if (!this.guard()) return;
+    const text = node?.unknownData?.text || node?.text || "";
+    if (!text.trim() && !userPrompt) return this.say("Node is empty.");
+
+    const file = this.getCanvasFile();
+    if (!file) return this.say("No active canvas file.");
+
+    const canvasData = await this.readCanvas(file);
+    const { context } = this.extractNodeContext(node, canvasData);
+    const vaultNotes = await this.getVaultContextForNode(node, file);
+
+    const n = this.say("AGY: Running Visual Brainstorming (5 Directions)...", 0);
+    try {
+      const resp = await this.post("canvas-visual-brainstorm", {
+        nodeText: text.trim(),
+        context,
+        styleOverride,
+        userPrompt: userPrompt || "",
+        vaultNotes,
+      }, 120000);
+      n.hide();
+
+      if (!resp.ok || !resp.concepts?.length) {
+        return this.say(`Visual brainstorm failed: ${resp.error || "No concepts generated"}`);
+      }
+
+      new VisualBrainstormModal(this.app, {
+        focalText: text.trim(),
+        concepts: resp.concepts,
+        directions: resp.directions || [],
+        recommendations: resp.recommendations || {},
+        onApplyConcept: async (concept, i) => {
+          const freshData = await this.readCanvas(file);
+          this.applyVisualConceptCard(file, freshData, node, concept, i);
+          await this.writeCanvas(file, freshData);
+          this.say(`Added "${concept.title}" to Canvas.`);
+        },
+        onGenerateImage: async (concept) => {
+          this.genImageWithPrompt(node, concept);
+        },
+        onRefine: (concept) => {
+          new RefinePromptModal(this.app, "Refine Visual Concept", `Enter refinement instructions for "${concept.title}":`, async (refineText) => {
+            const rn = this.say("AGY: Refining visual concept...", 0);
+            try {
+              const refineResp = await this.post("canvas-visual-brainstorm/refine", {
+                baseConcept: concept,
+                refinementInstructions: refineText,
+              });
+              rn.hide();
+              if (refineResp.ok && refineResp.concept) {
+                this.say("Concept refined.");
+                const freshData = await this.readCanvas(file);
+                this.applyVisualConceptCard(file, freshData, node, refineResp.concept, 0);
+                await this.writeCanvas(file, freshData);
+              }
+            } catch (err) {
+              rn.hide();
+              this.say(`Refinement failed: ${err.message}`);
+            }
+          }).open();
+        }
+      }).open();
+
+    } catch (e) {
+      n.hide();
+      this.say(`Error: ${e.message}`);
+    }
+  }
+
+  applyVisualConceptCard(canvasFile, canvasData, focalNode, concept, index = 0) {
+    const px = focalNode.x ?? 0;
+    const py = focalNode.y ?? 0;
+    const pw = focalNode.width ?? 260;
+    const ph = focalNode.height ?? 100;
+
+    const cardWidth = 460;
+    const cardHeight = 360;
+    const gapX = 120;
+    const gapY = 30;
+
+    const newId = this.uid();
+    const markdownLines = [
+      `### [${(concept.dimensionId || "CONCEPT").toUpperCase()}] ${concept.title}`,
+      concept.visualMetaphor ? `> **Metaphor**: ${concept.visualMetaphor}` : "",
+      "",
+      concept.visualStory || "",
+      "",
+      "#### 7-Layer Visual Detail",
+      `- **Subject**: ${concept.subject || "N/A"}`,
+      `- **Secondary Details**: ${(concept.details || []).join(", ") || "N/A"}`,
+      `- **Materials**: ${concept.materials || "N/A"}`,
+      `- **Environment**: ${concept.environment || "N/A"}`,
+      `- **Lighting**: ${concept.lighting || "N/A"}`,
+      `- **Camera & Lens**: ${concept.camera || ""} ${concept.lens ? `(${concept.lens})` : ""}`,
+      `- **Composition**: ${concept.composition || "N/A"}`,
+      "",
+      `*Style: ${concept.style?.name || "Auto"} | Format: ${concept.media?.defaultAspect || "16:9"}*`,
+    ].filter(Boolean);
+
+    const newNode = {
+      id: newId,
+      type: "text",
+      text: markdownLines.join("\n"),
+      x: px + pw + gapX,
+      y: py + index * (cardHeight + gapY),
+      width: cardWidth,
+      height: cardHeight,
+      color: "3",
+    };
+
+    const newEdge = {
+      id: this.uid(),
+      fromNode: focalNode.id,
+      fromSide: "right",
+      toNode: newId,
+      toSide: "left",
+      label: concept.title || "Visual Concept",
+    };
+
+    canvasData.nodes.push(newNode);
+    canvasData.edges.push(newEdge);
+  }
+
+  async genImageWithPrompt(node, concept) {
+    if (!this.guard()) return;
+    const file = this.getCanvasFile();
+    if (!file) return this.say("No active canvas file.");
+
+    const slug = (concept.title || "art").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
+    const vaultPath = `assets/generated/${slug}-${Date.now()}.png`;
+    const styleName = concept.style?.name || "Auto";
+
+    const n = this.say(`AGY: Synthesizing image [${styleName}]...`, 0);
+    try {
+      const resp = await this.post("generate-image", {
+        prompt: concept.imagePrompt || concept.subject || concept.title,
+        styleOverride: concept.style?.id,
+        mediaOverride: concept.media?.id,
+        vaultPath,
+      }, 180000);
+      n.hide();
+
+      if (!resp.ok) return this.say(`Image generation failed: ${resp.error || "Unknown error"}`);
+
+      const imgW = resp.width || concept.media?.defaultSize?.width || 560;
+      const imgH = resp.height || concept.media?.defaultSize?.height || 315;
+
+      const data = await this.readCanvas(file);
+      const px   = node.x ?? 0;
+      const py   = node.y ?? 0;
+      const pw   = node.width ?? 250;
+      const ph   = node.height ?? 100;
+
+      const imgNode = {
+        id:     this.uid(),
+        type:   "file",
+        file:   resp.savedPath,
+        x:      px + pw + 100,
+        y:      py + (ph - imgH) / 2,
+        width:  imgW,
+        height: imgH,
+      };
+
+      data.nodes.push(imgNode);
+      data.edges.push({
+        id:       this.uid(),
+        fromNode: node.id,
+        fromSide: "right",
+        toNode:   imgNode.id,
+        toSide:   "left",
+        label:    concept.title || `AGY: ${styleName}`,
+      });
+
+      await this.writeCanvas(file, data);
+      this.say(`Image generated and placed on Canvas.${resp.cached ? " (cached)" : ""}`);
+    } catch (e) {
+      n.hide();
+      this.say(`Error: ${e.message}`);
+    }
+  }
+
   // ── Command Palette Dispatchers ───────────────────────────────────────────
 
   getSelectedNode() {
@@ -1094,6 +1426,12 @@ class AntigravityCanvasPlugin extends Plugin {
     if (sel.length) return sel[0];
     const all = Array.from(canvas.nodes?.values() || []);
     return all[0] || null;
+  }
+
+  cmdVisualBrainstorm() {
+    const node = this.getSelectedNode();
+    if (!node) return this.say("Please select a Canvas card first.");
+    this.visualBrainstorm(node);
   }
 
   cmdSkill(skillId) {

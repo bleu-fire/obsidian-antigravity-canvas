@@ -16,6 +16,11 @@ import {
   CONTEXT_LEVELS,
   SKILL_CONTEXT_REQUIREMENTS
 } from "./context-engine.js";
+import {
+  generateVisualBrainstorm,
+  refineVisualConcept,
+  CREATIVE_DIMENSIONS,
+} from "./visual-brainstorm-engine.js";
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -74,6 +79,52 @@ app.post("/canvas-brainstorm-director", async (req, res) => {
     const r = await enqueue(() => brainstormCreativeDirectorConcepts({ nodeText, context }));
     res.json({ ok: true, ...r });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/canvas-visual-brainstorm/dimensions", (_req, res) => {
+  res.json({ ok: true, dimensions: CREATIVE_DIMENSIONS });
+});
+
+app.post("/canvas-visual-brainstorm", async (req, res) => {
+  const { nodeText, context, styleOverride, mediaOverride, userPrompt, vaultNotes } = req.body;
+  try {
+    const r = await enqueue(() => generateVisualBrainstorm({
+      nodeText,
+      context,
+      styleOverride,
+      mediaOverride,
+      userPrompt,
+      vaultNotes,
+    }));
+    res.json(r);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post("/canvas-visual-brainstorm/refine", async (req, res) => {
+  const {
+    baseConcept,
+    refinementInstructions,
+    styleOverride,
+    lightingOverride,
+    compositionOverride,
+    environmentOverride,
+  } = req.body;
+  if (!baseConcept) return res.status(400).json({ error: "baseConcept required" });
+  try {
+    const r = await enqueue(() => refineVisualConcept({
+      baseConcept,
+      refinementInstructions,
+      styleOverride,
+      lightingOverride,
+      compositionOverride,
+      environmentOverride,
+    }));
+    res.json(r);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 app.post("/canvas-brainstorm", async (req, res) => {
