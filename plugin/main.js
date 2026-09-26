@@ -326,6 +326,16 @@ class AntigravityCanvasPlugin extends Plugin {
     this.addCommand({ id: "agy-expand-rec",   name: "AGY Studio: Expand with Strategic Rec",     callback: () => this.cmdExpandRec() });
     this.addCommand({ id: "agy-generate-image", name: "AGY Studio: Generate Image (Auto Context)", callback: () => this.cmdImage() });
     this.addCommand({ id: "agy-image-picker", name: "AGY Studio: Generate Image (Choose Style...)", callback: () => this.cmdPickStyleImage() });
+    this.addCommand({ id: "agy-img-cinematic", name: "AGY Image: Cinematic Realism (16:9)", callback: () => this.cmdImage("cinematic-realism") });
+    this.addCommand({ id: "agy-img-gaming", name: "AGY Image: AAA Game Key Art (16:9)", callback: () => this.cmdImage("aaa-game-keyart") });
+    this.addCommand({ id: "agy-img-dark-fantasy", name: "AGY Image: Dark Fantasy Souls (16:9)", callback: () => this.cmdImage("dark-fantasy-art") });
+    this.addCommand({ id: "agy-img-scifi", name: "AGY Image: Sci-Fi Cinematic (16:9)", callback: () => this.cmdImage("sci-fi-cinematic") });
+    this.addCommand({ id: "agy-img-neonoir", name: "AGY Image: Neo-Noir (16:9)", callback: () => this.cmdImage("neo-noir") });
+    this.addCommand({ id: "agy-img-loot", name: "AGY Image: Legendary Loot (1:1)", callback: () => this.cmdImage("gaming-macro-loot") });
+    this.addCommand({ id: "agy-img-cartoon", name: "AGY Image: 3D Animation Pixar (1:1)", callback: () => this.cmdImage("modern-cartoon-3d") });
+    this.addCommand({ id: "agy-img-anime", name: "AGY Image: Anime Cinematic (16:9)", callback: () => this.cmdImage("anime-cinematic") });
+    this.addCommand({ id: "agy-img-youtube", name: "AGY Image: YouTube Viral Thumbnail (16:9)", callback: () => this.cmdImage("youtube-viral") });
+    this.addCommand({ id: "agy-img-luxury", name: "AGY Image: Luxury Editorial (16:9)", callback: () => this.cmdImage("luxury-editorial") });
 
     // Context Menu on Canvas Nodes
     this.registerEvent(
@@ -366,10 +376,17 @@ class AntigravityCanvasPlugin extends Plugin {
           }).catch(() => this.genImage(node, null));
         }));
         menu.addItem(i => i.setTitle("AGY Image: Auto Context").setIcon("image").onClick(() => this.genImage(node)));
-        menu.addItem(i => i.setTitle("AGY Image: Mobile App UI (9:16)").setIcon("smartphone").onClick(() => this.genImage(node, "mobile_ui")));
-        menu.addItem(i => i.setTitle("AGY Image: Gaming Keyart (16:9)").setIcon("swords").onClick(() => this.genImage(node, "gaming")));
-        menu.addItem(i => i.setTitle("AGY Image: Legendary Loot (1:1)").setIcon("gem").onClick(() => this.genImage(node, "loot")));
-        menu.addItem(i => i.setTitle("AGY Image: Cinematic Dramatic").setIcon("film").onClick(() => this.genImage(node, "cinematic")));
+        menu.addItem(i => i.setTitle("AGY Image: Cinematic Realism (16:9)").setIcon("film").onClick(() => this.genImage(node, "cinematic-realism")));
+        menu.addItem(i => i.setTitle("AGY Image: AAA Game Key Art (16:9)").setIcon("swords").onClick(() => this.genImage(node, "aaa-game-keyart")));
+        menu.addItem(i => i.setTitle("AGY Image: Dark Fantasy Souls (16:9)").setIcon("skull").onClick(() => this.genImage(node, "dark-fantasy-art")));
+        menu.addItem(i => i.setTitle("AGY Image: Sci-Fi Cinematic (16:9)").setIcon("rocket").onClick(() => this.genImage(node, "sci-fi-cinematic")));
+        menu.addItem(i => i.setTitle("AGY Image: Neo-Noir (16:9)").setIcon("umbrella").onClick(() => this.genImage(node, "neo-noir")));
+        menu.addItem(i => i.setTitle("AGY Image: Legendary Loot (1:1)").setIcon("gem").onClick(() => this.genImage(node, "gaming-macro-loot")));
+        menu.addItem(i => i.setTitle("AGY Image: 3D Animation Pixar (1:1)").setIcon("smile").onClick(() => this.genImage(node, "modern-cartoon-3d")));
+        menu.addItem(i => i.setTitle("AGY Image: Anime Cinematic (16:9)").setIcon("sparkles").onClick(() => this.genImage(node, "anime-cinematic")));
+        menu.addItem(i => i.setTitle("AGY Image: YouTube Viral (16:9)").setIcon("play").onClick(() => this.genImage(node, "youtube-viral")));
+        menu.addItem(i => i.setTitle("AGY Image: Luxury Editorial (16:9)").setIcon("award").onClick(() => this.genImage(node, "luxury-editorial")));
+        menu.addItem(i => i.setTitle("AGY Image: Mobile App UI (9:16)").setIcon("smartphone").onClick(() => this.genImage(node, "minimal-saas")));
       })
     );
 
