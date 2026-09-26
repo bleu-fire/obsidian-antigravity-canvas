@@ -3,6 +3,7 @@ import { promisify } from "util";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { resolveStyle, buildVisualPrompt } from "./style-registry.js";
 
 const execFileAsync = promisify(execFile);
 const AGY_BIN  = process.env.AGY_BIN || "/home/bleufire/.gemini/bin/agy";
@@ -248,8 +249,19 @@ export function enhancePrompt(prompt, context, styleType) {
 
 // ── generateImage with Deep Visual Reasoning Protocol ───────────────────────
 
-export async function generateImage({ prompt, context, styleOverride, vaultPath, model }) {
-  const { aspectRatio, width, height, styleType, label } = classifyIdeaAndStyle(prompt, context, styleOverride);
+export async function generateImage({ prompt, context, styleOverride, mediaOverride, vaultPath, model }) {
+  const { style, media } = resolveStyle({
+    styleOverride,
+    mediaOverride,
+    prompt: prompt || "",
+    context: context || "",
+  });
+
+  const width = media?.defaultSize?.width || 560;
+  const height = media?.defaultSize?.height || 315;
+  const aspectRatio = media?.defaultAspect || "16:9";
+  const label = style ? `AGY: ${style.name}` : "AGY: Auto";
+  const styleType = style ? style.id : "cinematic-realism";
 
   const key = hash(`img:${prompt}:${context || ""}:${styleType}:${vaultPath || ""}:${aspectRatio}`);
   const c = cacheGet(key);
@@ -261,18 +273,32 @@ export async function generateImage({ prompt, context, styleOverride, vaultPath,
 
   const relPath = vaultPath || `assets/generated/img-${Date.now()}.png`;
 
+  const isUI = style.category === "interface" || media.id === "ui-screen" || media.id === "wireframe";
+
+  const engineeredPrompt = buildVisualPrompt({
+    subject: prompt,
+    context: context || "",
+    style,
+    media,
+    customInstructions: isUI
+      ? "Render a crisp pixel-perfect UI interface mockup"
+      : "Render a pure immersive cinematic/photographic visual scene. Absolutely NO text, NO watermarks, NO HUD overlays, NO graphic borders, NO metadata labels, NO logos.",
+  });
+
+  const negativeRules = isUI
+    ? "no photographic background, no hands holding device, no blurry text"
+    : "no text, no words, no letters, no logos, no watermarks, no UI frames, no HUD overlay, no borders, no metadata labels, no diagram boxes, no graphic badges, no signatures, no overlays";
+
+  const finalPromptText = `${engineeredPrompt}, --no ${negativeRules}`;
+
   const instruction =
-    `You are the Canvas Visual Reasoning, Thumbnail Art Direction & UI/UX Design Engine adhering strictly to the thumbnail-architect, ui-ux-design-master, canvas-visual-reasoning, and gaming-visual-engine protocols. ` +
-    `Focal Concept Card: "${prompt}". ` +
-    (context ? `Upstream Graph Context & Storyline Lineage: "${context}". ` : "") +
-    `Selected Aesthetic Profile: "${styleType}" (Target Aspect Ratio: "${aspectRatio}"). ` +
-    `Execute the Cognitive Reasoning Loop: ` +
-    `1. Deconstruct the user problem and product goals. ` +
-    `2. Formulate clear visual hierarchy and design tokens (exact HEX colors, PBR materials, card elevation). ` +
-    `3. Establish realistic optical staging (studio lighting, UI edge definitions, screen contrast). ` +
-    `4. Format layout to target aspect ratio ("${aspectRatio}"). ` +
-    `5. Strip out cheap AI tropes and clichés (--no cartoon unless requested, no flat vector, no blurry artifacts, no hands holding phones). ` +
-    `Now, call the generate_image tool with AspectRatio: "${aspectRatio}", ImageName: "canvas_art_${Date.now()}", and your deeply reasoned studio-grade prompt. ` +
+    `You are the Master Visual Art Director. ` +
+    `Generate a studio-grade visual image asset for the following prompt:\n\n` +
+    `Prompt: "${finalPromptText.replace(/"/g, "'")}"\n\n` +
+    `MANDATORY COMPOSITION RULES:\n` +
+    `- ${isUI ? "Render a clean, pixel-perfect UI interface mockup." : "Render a pure photographic / artistic scene WITHOUT any text, watermarks, HUD overlays, borders, metadata labels, or UI frames."}\n` +
+    `- The scene must be a rich physical environment or subject, completely filling the ${aspectRatio} frame.\n\n` +
+    `Call the generate_image tool with AspectRatio: "${aspectRatio}", ImageName: "canvas_art_${Date.now()}", and this prompt: "${finalPromptText.replace(/"/g, "'")}". ` +
     `After the image is generated, copy the resulting file to "${absPath}". ` +
     `Reply with ONLY a valid JSON object: {"savedPath": "${relPath}", "aspectRatio": "${aspectRatio}", "width": ${width}, "height": ${height}, "styleType": "${styleType}", "label": "${label}", "status": "ok"}`;
 
@@ -292,6 +318,7 @@ export async function generateImage({ prompt, context, styleOverride, vaultPath,
     aspectRatio,
     label,
     styleType,
+    detectedStyle: style ? style.name : "Auto",
   };
 
   cacheSet(key, finalOutput);
