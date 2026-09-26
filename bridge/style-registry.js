@@ -530,6 +530,37 @@ export function resolveStyle({ styleOverride, prompt = "", context = "", mediaOv
 
 // ── Prompt Builder ─────────────────────────────────────────────────────────────
 
+export function cleanVisualSubject(text) {
+  if (!text) return "";
+  return text
+    .replace(/^###\s*\[[A-Z]+\]\s*/i, "")
+    .replace(/^\[[A-Z]+\]\s*/i, "")
+    .replace(/#[a-zA-Z0-9_-]+/g, "")
+    .replace(/\n+/g, " ")
+    .trim();
+}
+
+export function extractVisualSceneFromContext(subject, context) {
+  const cleanSubject = cleanVisualSubject(subject);
+  
+  // Extract concrete upstream physical subject if subject is an abstract metacognitive node
+  const isAbstractMeta = /(assumption|risk|gap|unknown|evaluation|workflow efficacy|intent|parameter)/i.test(cleanSubject);
+  let physicalScene = "";
+  
+  if (context) {
+    const upstreamMatch = context.match(/\[Upstream Chain:\s*([^\],]+)/i);
+    if (upstreamMatch && upstreamMatch[1]) {
+      physicalScene = cleanVisualSubject(upstreamMatch[1]);
+    }
+  }
+
+  if (isAbstractMeta && physicalScene) {
+    return `${physicalScene}. Visual nuances and elements: ${cleanSubject}`;
+  }
+  
+  return cleanSubject;
+}
+
 export function buildVisualPrompt({ subject, context, style, media, customInstructions }) {
   if (!style || !media) {
     return `${subject}${context ? `. Context: ${context}` : ""}`;
@@ -537,7 +568,7 @@ export function buildVisualPrompt({ subject, context, style, media, customInstru
 
   const narrative = context
     ? `Primary Subject / Concept: [${subject}]. Thematic Context: [${context}]`
-    : subject;
+    : `Primary Subject / Concept: [${subject}]`;
 
   const parts = [
     `[STYLE: ${style.name}]`,

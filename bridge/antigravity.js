@@ -106,9 +106,9 @@ export async function generateImage({
 
   const instruction =
     `You are the Antigravity Master Art Director executing studio-grade image generation.\n` +
-    `Focal Subject: "${prompt}"\n` +
     `Selected Style: "${style.name}" (${style.family} / ${style.category})\n` +
-    `Engineered Prompt: ${engineeredPrompt}${antiDiagramConstraint}\n\n` +
+    `Visual Specification & Prompt: ${engineeredPrompt}${antiDiagramConstraint}\n\n` +
+    `Core Directive: Always render a concrete, physical visual scene with real subjects, characters, environment, and physical lighting. Never output abstract diagrams, perspective grids, or symbolic geometry.\n\n` +
     `Execute these steps:\n` +
     `1. Call the generate_image tool with AspectRatio: "${aspectRatio}", ImageName: "canvas_art_${Date.now()}", and the exact engineered prompt above.\n` +
     `2. After generation, copy the resulting file to "${absPath}".\n` +
