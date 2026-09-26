@@ -99,6 +99,19 @@ export const SKILL_DEFINITIONS = {
   },
 };
 
+export const SKILL_PROMPT_INSTRUCTIONS = {
+  "brainstorm": "Generate 3 to 5 genuinely distinct, clustered conceptual directions. For each, identify underlying assumptions, strategic trade-offs, and critical unresolved questions.",
+  "explore": "Deconstruct the core subject across its constituent dimensions, semantic prerequisites, underlying mechanics, and real-world variants.",
+  "connect": "Discover functional, non-obvious dependencies, potential contradictions, enabling synergies, and conceptual bridges with explicit rationale.",
+  "find-gaps": "Conduct a thorough blind-spot audit. Detect missing architectural requirements, unaddressed risks, unverified dependencies, and unanswered questions.",
+  "decompose": "Break the complex goal or system into 3-5 manageable, decoupled subsystems with defined inputs, responsibilities, and deliverables.",
+  "roadmap": "Sequence objectives into progressive phases and verifiable milestones with strict prerequisites and validation criteria.",
+  "challenge": "Stress-test the focal premise. Surface hidden assumptions, potential failure modes, performance bottlenecks, and viable alternatives.",
+  "research-map": "Structure the inquiry across 4 pillars: Core Concepts, Key Questions, Known Sources/Benchmarks, and Critical Unknowns.",
+  "synthesize": "Distill and condense multiple concepts and notes into higher-level conceptual models and key takeaways.",
+  "evolve": "Perform differential analysis comparing existing canvas cards against new knowledge and recent notes, suggesting non-destructive updates.",
+};
+
 export async function executeCognitiveSkill({
   skillId,
   nodeText = "",
@@ -116,6 +129,8 @@ export async function executeCognitiveSkill({
     nextSkills: ["explore", "find-gaps"],
   };
 
+  const specificInstruction = SKILL_PROMPT_INSTRUCTIONS[skillId] || def.description;
+
   const cacheKey = hash(`cog:${skillId}:${nodeText}:${context}:${userPrompt}:${(existingNodes || []).slice(0, 5).join(",")}`);
   const cached = cacheGet(cacheKey);
   if (cached) return { ...cached, cached: true };
@@ -123,7 +138,8 @@ export async function executeCognitiveSkill({
   const prompt = [
     `You are the Senior AI Spatial Thinking Engine operating within Obsidian Canvas.`,
     `Active Skill Protocol: "${def.name}" (${skillId}).`,
-    `Skill Objective: ${def.description}`,
+    `SKILL OBJECTIVE & SPECIALIZED PROTOCOL:`,
+    `${specificInstruction}`,
     ``,
     `INPUT CONTEXT:`,
     `- Focal Subject / Node: "${nodeText}"`,
@@ -260,7 +276,7 @@ export function routeIntent({ userPrompt = "", context = "" }) {
   if (p.includes("connect") || p.includes("relat") || p.includes("link") || p.includes("depend")) {
     return { skillId: "connect", confidence: 0.90, reason: "Inquiry seeks relationships and dependencies between cards." };
   }
-  if (p.includes("research") || p.includes("investigat") || p.includes("source") || p.includes("unknown")) {
+  if (p.includes("research") || p.includes("investigat") || p.includes("inquiry") || p.includes("source") || p.includes("unknown")) {
     return { skillId: "research-map", confidence: 0.90, reason: "Inquiry is an open exploration of an unfamiliar topic." };
   }
   if (p.includes("synthes") || p.includes("distill") || p.includes("summariz") || p.includes("unif")) {

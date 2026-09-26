@@ -212,6 +212,61 @@ class SkillPickerModal extends Modal {
   }
 }
 
+// ── Visual Style Picker Modal ──────────────────────────────────────────────
+
+class StylePickerModal extends Modal {
+  constructor(app, styles, onSelect) {
+    super(app);
+    this.styles = styles;
+    this.onSelect = onSelect;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("agy-modal-container");
+
+    contentEl.createEl("h2", { text: "AGY: Select Visual Style" });
+    contentEl.createEl("p", {
+      cls: "mod-muted",
+      text: "Choose a visual style recipe for image generation, or select Auto to infer from node context.",
+    });
+
+    const list = contentEl.createDiv({ cls: "agy-picker-list" });
+
+    // Auto option
+    const autoItem = list.createDiv({ cls: "agy-picker-item" });
+    const autoTop = autoItem.createDiv({ cls: "agy-card-top" });
+    autoTop.createSpan({ cls: "agy-badge", text: "Auto" });
+    autoTop.createEl("strong", { text: "Auto Detect (Context-Aware)" });
+    autoItem.createEl("div", {
+      cls: "agy-card-content",
+      text: "Automatically analyzes node text and graph context to resolve optimal style and aspect ratio.",
+    });
+    autoItem.onclick = () => {
+      this.close();
+      if (this.onSelect) this.onSelect(null);
+    };
+
+    for (const style of this.styles) {
+      const item = list.createDiv({ cls: "agy-picker-item" });
+      const top = item.createDiv({ cls: "agy-card-top" });
+      top.createSpan({ cls: "agy-badge", text: style.family || "Style" });
+      top.createEl("strong", { text: style.name });
+
+      item.createEl("div", { cls: "agy-card-content", text: style.description });
+      item.onclick = () => {
+        this.close();
+        if (this.onSelect) this.onSelect(style.id);
+      };
+    }
+  }
+
+  onClose() {
+    this.contentEl.empty();
+  }
+}
+
 // ── Main Plugin Class ───────────────────────────────────────────────────────
 
 class AntigravityCanvasPlugin extends Plugin {
@@ -251,6 +306,7 @@ class AntigravityCanvasPlugin extends Plugin {
     this.addCommand({ id: "agy-design-system",name: "AGY Studio: UI Design System Tokens",      callback: () => this.cmdDesignSystem() });
     this.addCommand({ id: "agy-expand-rec",   name: "AGY Studio: Expand with Strategic Rec",     callback: () => this.cmdExpandRec() });
     this.addCommand({ id: "agy-generate-image", name: "AGY Studio: Generate Image (Auto Context)", callback: () => this.cmdImage() });
+    this.addCommand({ id: "agy-image-picker", name: "AGY Studio: Generate Image (Choose Style...)", callback: () => this.cmdPickStyleImage() });
 
     // Context Menu on Canvas Nodes
     this.registerEvent(
@@ -280,6 +336,15 @@ class AntigravityCanvasPlugin extends Plugin {
 
         // Group 3: Image Generation
         menu.addSeparator();
+        menu.addItem(i => i.setTitle("AGY Image: Choose Style & Generate...").setIcon("palette").onClick(() => {
+          fetch(`${BRIDGE}/styles`).then(r => r.json()).then(data => {
+            if (data.ok && data.styles) {
+              new StylePickerModal(this.app, data.styles, (styleId) => this.genImage(node, styleId)).open();
+            } else {
+              this.genImage(node, null);
+            }
+          }).catch(() => this.genImage(node, null));
+        }));
         menu.addItem(i => i.setTitle("AGY Image: Auto Context").setIcon("image").onClick(() => this.genImage(node)));
         menu.addItem(i => i.setTitle("AGY Image: Mobile App UI (9:16)").setIcon("smartphone").onClick(() => this.genImage(node, "mobile_ui")));
         menu.addItem(i => i.setTitle("AGY Image: Gaming Keyart (16:9)").setIcon("swords").onClick(() => this.genImage(node, "gaming")));
@@ -382,7 +447,9 @@ class AntigravityCanvasPlugin extends Plugin {
     const ancestors = [];
     const directParentEdges = canvasData.edges.filter(e => e.toNode === targetNode.id);
 
+    const parentIds = new Set();
     for (const edge of directParentEdges) {
+      parentIds.add(edge.fromNode);
       const parent = nodeMap.get(edge.fromNode);
       if (parent) {
         const text = (parent.text || parent.unknownData?.text || "").trim();
@@ -411,8 +478,24 @@ class AntigravityCanvasPlugin extends Plugin {
       }
     }
 
+    // Sibling nodes (nodes sharing the same parents)
+    const siblings = [];
+    if (parentIds.size > 0) {
+      const siblingEdges = canvasData.edges.filter(e => parentIds.has(e.fromNode) && e.toNode !== targetNode.id);
+      for (const sEdge of siblingEdges) {
+        const sib = nodeMap.get(sEdge.toNode);
+        if (sib) {
+          const text = (sib.text || sib.unknownData?.text || "").trim();
+          if (text && !siblings.includes(text)) {
+            siblings.push(text.replace(/\n+/g, " "));
+          }
+        }
+      }
+    }
+
     let narrative = "";
     if (ancestors.length) narrative += `[Upstream Chain: ${ancestors.join(" -> ")}]`;
+    if (siblings.length) narrative += ` [Sibling Context: ${siblings.slice(0, 3).join(", ")}]`;
     if (descendants.length) narrative += ` [Downstream Branches: ${descendants.join(", ")}]`;
 
     const canvasSummary = `Canvas contains ${canvasData.nodes.length} nodes and ${canvasData.edges.length} connections. Major topics: ${existingTitles.slice(0, 15).join("; ")}`;
@@ -1033,6 +1116,23 @@ class AntigravityCanvasPlugin extends Plugin {
       }
     } catch {
       this.say("Bridge offline. Cannot fetch skills.");
+    }
+  }
+
+  async cmdPickStyleImage() {
+    const node = this.getSelectedNode();
+    if (!node) return this.say("Please select a Canvas card first.");
+
+    try {
+      const resp = await fetch(`${BRIDGE}/styles`);
+      const data = await resp.json();
+      if (data.ok && data.styles) {
+        new StylePickerModal(this.app, data.styles, (styleId) => {
+          this.genImage(node, styleId);
+        }).open();
+      }
+    } catch {
+      this.genImage(node, null);
     }
   }
 
