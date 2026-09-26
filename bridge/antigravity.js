@@ -62,7 +62,6 @@ export async function generateText({ prompt, systemInstruction, model, effort, u
 export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null) {
   const combined = `${prompt} ${context}`.toLowerCase();
 
-  // If styleOverride is explicitly given (cinematic, cartoon, vibrant)
   if (styleOverride) {
     if (styleOverride === "cartoon") return { aspectRatio: "1:1", width: 360, height: 360, styleType: "cartoon_3d", label: "AGY 3D Cartoon" };
     if (styleOverride === "vibrant") return { aspectRatio: "16:9", width: 560, height: 315, styleType: "vibrant_chromatic", label: "AGY Vibrant 16:9" };
@@ -174,6 +173,58 @@ export async function generateImage({ prompt, context, styleOverride, vaultPath,
 
   cacheSet(key, finalOutput);
   return { ...finalOutput, cached: false };
+}
+
+// ── generateWireframe from Context ──────────────────────────────────────────
+
+export async function generateWireframe({ nodeText, context }) {
+  const key = hash(`wireframe:${nodeText}:${context || ""}`);
+  const c = cacheGet(key);
+  if (c) return { wireframe: c, cached: true };
+
+  const prompt =
+    `You are the Canvas Wireframe Architect adhering to the thumbnail-architect and canvas-visual-reasoning protocols. ` +
+    `Focal Node: "${nodeText}". ` +
+    (context ? `Connected Canvas Story Context: "${context}". ` : "") +
+    `Synthesize a structured 16:9 editorial wireframe card in clean Obsidian markdown. ` +
+    `Structure: ` +
+    `### Wireframe: [Concise 2-4 Word Concept Title]\n\n` +
+    `**Headline Hook**: [Bold 2-4 word uppercase hook]\n` +
+    `**Sub-headline**: [1-sentence context or value proposition]\n\n` +
+    `#### Composition Specs (16:9)\n` +
+    `- **Ratio**: 16:9 Widescreen (560x315 px)\n` +
+    `- **Focal Anchor**: [Subject placement along the 60% golden ratio line]\n` +
+    `- **Lighting & Contrast**: [Key light direction + asymmetric rim light]\n` +
+    `- **Curiosity Tension**: [The unresolved visual conflict driving viewer attention]\n\n` +
+    `> 💡 **Strategic Recommendation**: [Specific next card, visual asset, or dramatic angle recommended for the next connected node]\n\n` +
+    `Return ONLY the markdown text. No surrounding meta-explanations.`;
+
+  const raw = await runAgy(prompt, { effort: "medium" });
+  cacheSet(key, raw);
+  return { wireframe: raw, cached: false };
+}
+
+// ── expandWithRecommendation from Context ───────────────────────────────────
+
+export async function expandWithRecommendation({ nodeText, context }) {
+  const key = hash(`expand_rec:${nodeText}:${context || ""}`);
+  const c = cacheGet(key);
+  if (c) return { text: c, cached: true };
+
+  const prompt =
+    `You are the Canvas Context Strategic Advisor. ` +
+    `Focal Node: "${nodeText}". ` +
+    (context ? `Upstream Canvas Narrative: "${context}". ` : "") +
+    `1. Expand this concept into 2 rich, analytical sentences that deepen the narrative or technical architecture. ` +
+    `2. Add a clear, actionable recommendation for what card or asset should be created next based on this context. ` +
+    `Format:\n` +
+    `[2 analytical expansion sentences]\n\n` +
+    `> 💡 **Context Recommendation**: [1-2 sentences recommending the optimal next card, visual asset, or connected angle to explore]\n\n` +
+    `Return ONLY the content. No preamble.`;
+
+  const raw = await runAgy(prompt, { effort: "medium" });
+  cacheSet(key, raw);
+  return { text: raw, cached: false };
 }
 
 // ── brainstormIdeas ──────────────────────────────────────────────────────────

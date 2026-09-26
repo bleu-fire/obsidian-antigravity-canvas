@@ -2,7 +2,13 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { execFileSync } from "child_process";
-import { generateText, generateImage, brainstormIdeas } from "./antigravity.js";
+import {
+  generateText,
+  generateImage,
+  brainstormIdeas,
+  generateWireframe,
+  expandWithRecommendation
+} from "./antigravity.js";
 import { enqueue, getStats } from "./queue.js";
 
 const app  = express();
@@ -19,7 +25,7 @@ app.use((req, _res, next) => {
 app.get("/health", (_req, res) => {
   let agyOk = false;
   try { execFileSync(AGY, ["--help"], { timeout: 3000, stdio: "pipe" }); agyOk = true; } catch {}
-  res.json({ status: "ok", version: "2.3.0", backend: "antigravity-agy", agyOk, queue: getStats() });
+  res.json({ status: "ok", version: "2.4.0", backend: "antigravity-agy", agyOk, queue: getStats() });
 });
 
 app.post("/generate-text", async (req, res) => {
@@ -49,8 +55,26 @@ app.post("/canvas-brainstorm", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.post("/canvas-wireframe", async (req, res) => {
+  const { nodeText, context } = req.body;
+  if (!nodeText) return res.status(400).json({ error: "nodeText required" });
+  try {
+    const r = await enqueue(() => generateWireframe({ nodeText, context }));
+    res.json({ ok: true, ...r });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/canvas-expand-recommend", async (req, res) => {
+  const { nodeText, context } = req.body;
+  if (!nodeText) return res.status(400).json({ error: "nodeText required" });
+  try {
+    const r = await enqueue(() => expandWithRecommendation({ nodeText, context }));
+    res.json({ ok: true, ...r });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get("/stats", (_req, res) => res.json(getStats()));
 
 app.listen(PORT, "127.0.0.1", () => {
-  console.log("Antigravity Bridge v2.3.0 — http://127.0.0.1:" + PORT);
+  console.log("Antigravity Bridge v2.4.0 — http://127.0.0.1:" + PORT);
 });
