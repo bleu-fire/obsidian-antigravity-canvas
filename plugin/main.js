@@ -1,6 +1,6 @@
 /*
- * Antigravity Canvas Plugin v2.4
- * Canvas Context Director, 16:9 Wireframe Architect & Strategic Recommendation Engine
+ * Antigravity Canvas Plugin v2.5
+ * Canvas Context Director, Gaming Visual Engine & 16:9 Wireframe Architect
  */
 
 const { Plugin, Notice } = require("obsidian");
@@ -23,6 +23,8 @@ class AntigravityCanvasPlugin extends Plugin {
     this.addCommand({ id: "agy-wireframe",      name: "AGY: Create 16:9 Wireframe Card",         callback: () => this.cmdWireframe() });
     this.addCommand({ id: "agy-expand-rec",     name: "AGY: Expand with Strategic Recommendation",callback: () => this.cmdExpandRec() });
     this.addCommand({ id: "agy-generate-image", name: "AGY: Generate image (Auto Context)",       callback: () => this.cmdImage() });
+    this.addCommand({ id: "agy-gen-gaming",     name: "AGY: Generate Gaming Keyart (16:9)",       callback: () => this.cmdImage("gaming") });
+    this.addCommand({ id: "agy-gen-loot",       name: "AGY: Generate Legendary Loot (1:1)",      callback: () => this.cmdImage("loot") });
     this.addCommand({ id: "agy-gen-cinematic",  name: "AGY: Generate Cinematic Dramatic image",   callback: () => this.cmdImage("cinematic") });
     this.addCommand({ id: "agy-gen-cartoon",    name: "AGY: Generate 3D Cartoon/Pixar image",     callback: () => this.cmdImage("cartoon") });
     this.addCommand({ id: "agy-gen-vibrant",    name: "AGY: Generate Hyper-Vibrant image",        callback: () => this.cmdImage("vibrant") });
@@ -34,6 +36,8 @@ class AntigravityCanvasPlugin extends Plugin {
         menu.addItem(i => i.setTitle("AGY  📐 16:9 Wireframe Layout").setIcon("layout").onClick(() => this.createWireframe(node)));
         menu.addItem(i => i.setTitle("AGY  💡 Expand with Recommendations").setIcon("sparkles").onClick(() => this.expandWithRec(node)));
         menu.addItem(i => i.setTitle("AGY  Generate image (Auto Context)").setIcon("image").onClick(() => this.genImage(node)));
+        menu.addItem(i => i.setTitle("AGY  Style: 🎮 Gaming Keyart (16:9)").setIcon("swords").onClick(() => this.genImage(node, "gaming")));
+        menu.addItem(i => i.setTitle("AGY  Style: ⚔️ Legendary Loot / Item (1:1)").setIcon("gem").onClick(() => this.genImage(node, "loot")));
         menu.addItem(i => i.setTitle("AGY  Style: 🎬 Cinematic Dramatic").setIcon("film").onClick(() => this.genImage(node, "cinematic")));
         menu.addItem(i => i.setTitle("AGY  Style: 🎨 3D Cartoon / Pixar").setIcon("smile").onClick(() => this.genImage(node, "cartoon")));
         menu.addItem(i => i.setTitle("AGY  Style: 🌈 Hyper-Vibrant Colors").setIcon("sparkles").onClick(() => this.genImage(node, "vibrant")));
@@ -170,7 +174,7 @@ class AntigravityCanvasPlugin extends Plugin {
         y:      py + (ph - cardHeight) / 2,
         width:  cardWidth,
         height: cardHeight,
-        color:  "3", // high-contrast purple
+        color:  "3",
       };
 
       data.nodes.push(wireframeNode);
@@ -222,7 +226,7 @@ class AntigravityCanvasPlugin extends Plugin {
         y:      py + ph + 80,
         width:  cardWidth,
         height: cardHeight,
-        color:  "4", // distinct teal/cyan
+        color:  "4",
       };
 
       data.nodes.push(recNode);

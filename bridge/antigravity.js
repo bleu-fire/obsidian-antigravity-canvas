@@ -62,13 +62,38 @@ export async function generateText({ prompt, systemInstruction, model, effort, u
 export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null) {
   const combined = `${prompt} ${context}`.toLowerCase();
 
+  // Explicit style overrides
   if (styleOverride) {
+    if (styleOverride === "gaming") return { aspectRatio: "16:9", width: 560, height: 315, styleType: "gaming_keyart", label: "AGY Gaming Keyart 16:9" };
+    if (styleOverride === "loot")   return { aspectRatio: "1:1", width: 360, height: 360, styleType: "gaming_macro_loot", label: "AGY Legendary Loot 1:1" };
     if (styleOverride === "cartoon") return { aspectRatio: "1:1", width: 360, height: 360, styleType: "cartoon_3d", label: "AGY 3D Cartoon" };
     if (styleOverride === "vibrant") return { aspectRatio: "16:9", width: 560, height: 315, styleType: "vibrant_chromatic", label: "AGY Vibrant 16:9" };
     if (styleOverride === "cinematic") return { aspectRatio: "16:9", width: 560, height: 315, styleType: "cinematic_dramatic", label: "AGY Cinematic 16:9" };
   }
 
-  // 1. Check for Cartoon / Pixar / 3D Stylized
+  // 1. Gaming Loot & Weapons (Macro 1:1)
+  if (/(loot|weapon|sword|katana|blade|dagger|shield|staff|bow|armor|relic|potion|chest|crate)/i.test(combined)) {
+    return {
+      aspectRatio: "1:1",
+      width: 360,
+      height: 360,
+      styleType: "gaming_macro_loot",
+      label: "AGY Legendary Loot 1:1",
+    };
+  }
+
+  // 2. Gaming Keyart / Boss / Esports / Streamer Thumbnails (16:9)
+  if (/(gaming|game|esports|boss|souls|elden|darksouls|raid|dungeon|fps|shooter|speedrun|minecraft|apex|valorant)/i.test(combined)) {
+    return {
+      aspectRatio: "16:9",
+      width: 560,
+      height: 315,
+      styleType: "gaming_keyart",
+      label: "AGY Gaming Keyart 16:9",
+    };
+  }
+
+  // 3. 3D Cartoon / Pixar
   if (/(cartoon|cartoonic|pixar|disney|animated|stylized|anime|cute|toy|claymation|comic)/i.test(combined)) {
     const isPortrait = /(character|portrait|figure|hero|face|person)/i.test(combined);
     return {
@@ -80,7 +105,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 2. Check for Hyper-Vibrant / Colorful / Neon / Synthwave
+  // 4. Hyper-Vibrant / Neon / Synthwave
   if (/(color|colorful|vibrant|neon|synthwave|cyberpunk|holographic|iridescent|rainbow|prismatic)/i.test(combined)) {
     return {
       aspectRatio: "16:9",
@@ -91,8 +116,8 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 3. Check for 3:4 Character / Portrait
-  if (/(character|portrait|warrior|figure|person|face|statue|vertical|poster|model|cyborg|samurai|vampire)/i.test(combined)) {
+  // 5. 3:4 Character / Portrait
+  if (/(character|portrait|warrior|figure|person|face|statue|vertical|poster|model|cyborg|vampire)/i.test(combined)) {
     return {
       aspectRatio: "3:4",
       width: 330,
@@ -102,7 +127,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 4. Check for 1:1 Brand Mark / Emblem / Hardware Object
+  // 6. 1:1 Brand Mark / Hardware Object
   if (/(logo|icon|emblem|orb|cube|badge|mark|symbol|avatar|token|monogram|asset|crystal|apple|sphere)/i.test(combined)) {
     return {
       aspectRatio: "1:1",
@@ -113,7 +138,7 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     };
   }
 
-  // 5. Default to Cinematic & Dramatic 16:9
+  // Default: Cinematic 16:9
   return {
     aspectRatio: "16:9",
     width: 560,
@@ -121,6 +146,79 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
     styleType: "cinematic_dramatic",
     label: "AGY Cinematic 16:9",
   };
+}
+
+export function enhancePrompt(prompt, context, styleType) {
+  const narrative = context ? `Context & Theme: [${context}]. Primary Focal Card: [${prompt}]` : prompt;
+
+  if (styleType === "gaming_keyart") {
+    return (
+      `Unreal Engine 5 AAA gaming keyart and high-CTR thumbnail scene, 16:9 composition. ${narrative}. ` +
+      `Dynamic cinematic battle staging, colossal scale contrast, volumetric particle effects, glowing sparks, ` +
+      `intense electric neon and amber rim halo lighting isolating the silhouette, raytraced reflections on wet surfaces. ` +
+      `Lumen global illumination, Nanite micro-geometry details, razor-sharp 8k render, masterpiece video game cover quality. ` +
+      `--no flat vector, no muddy colors, no low resolution, no plastic textures, no blur`
+    );
+  }
+
+  if (styleType === "gaming_macro_loot") {
+    return (
+      `Award-winning 8k macro studio render of legendary gaming loot: ${narrative}, 1:1 composition. ` +
+      `Extreme close-up detailing folded Damascus steel grain, hand-carved luminous runes with liquid gold inlay, ` +
+      `subtle internal azure plasma energy flowing through precision metal channels, micro-beveled chamfers catching specular studio highlights. ` +
+      `Single 45-degree directional key light, sharp volumetric rim lighting against deep dark #080D1A background, Octane 8k render. ` +
+      `--no cartoon, no flat vector, no plastic shine, no low-poly, no blurry artifacts`
+    );
+  }
+
+  if (styleType === "cartoon_3d") {
+    return (
+      `Award-winning 3D stylized animation studio render of ${narrative}. ` +
+      `Feature-film animation character and environment aesthetics (Pixar / Sony Animation / Fortiche Arcane quality). ` +
+      `Rich subsurface scattering on tactile materials, expressive proportions, warm volumetric studio three-point lighting, ` +
+      `colorful bounce light, soft ambient occlusion, Octane 8k render, crystal clean edges, whimsical depth. ` +
+      `--no flat 2D, no low-poly, no muddy colors, no photographic grain, no deformed anatomy`
+    );
+  }
+
+  if (styleType === "vibrant_chromatic") {
+    return (
+      `Visually stunning hyper-vibrant artistic render of ${narrative}. ` +
+      `Intense dual-tone chromatic lighting, radiant volumetric neon glow, prismatic dispersion splitting into iridescent jewel tones, ` +
+      `optical smoked glass and liquid chrome reflections against deep obsidian dark void (#050811), ` +
+      `pristine 8k render, high-contrast saturation balance, vivid color harmony. ` +
+      `--no dull colors, no washed out grey, no muddy palette, no blurry noise`
+    );
+  }
+
+  if (styleType === "portrait_3_4") {
+    return (
+      `Authoritative high-fashion editorial portrait of ${narrative}, 3:4 vertical composition. ` +
+      `Structured tactile materials with fine micro-textures, Rembrandt split lighting, ` +
+      `crisp edge definition against deep neutral dark void (#080D1A), ` +
+      `Phase One 100MP medium format, 85mm portrait lens, f/2.0, award-winning editorial quality. ` +
+      `--no anime, no childish graphics, no deformed anatomy, no blur`
+    );
+  }
+
+  if (styleType === "object_1_1") {
+    return (
+      `Award-winning luxury 3D industrial design render of ${narrative}, 1:1 composition. ` +
+      `Beveled geometric construction, brushed aerospace titanium with dark gunmetal PBR finish and subtle internal glass refraction. ` +
+      `Directional studio key light at 45 degrees, sharp volumetric rim lighting creating crisp edge definition. ` +
+      `Clean dark neutral studio backdrop (#080D1A) with soft falloff, zero clutter, Hasselblad 8k studio render. ` +
+      `--no cartoon, no flat vector, no cheap neon, no low-poly, no blurry artifacts`
+    );
+  }
+
+  // cinematic_dramatic
+  return (
+    `Cinematic film still, 16:9 dramatic composition. ${narrative}. ` +
+    `Masterful cinematography with extreme chiaroscuro contrast, razor-sharp asymmetric rim light cutting through volumetric haze and smoke. ` +
+    `50mm anamorphic lens, deep natural shadow depth, desaturated cinematic grade with rich contrast, 8k photographic film plate, ` +
+    `heavy narrative tension, atmospheric dust particles catching the spotlight. ` +
+    `--no cartoon, no flat vector, no cheap neon, no blurry artifacts, no low resolution`
+  );
 }
 
 // ── generateImage with Deep Visual Reasoning Protocol ───────────────────────
@@ -139,13 +237,13 @@ export async function generateImage({ prompt, context, styleOverride, vaultPath,
   const relPath = vaultPath || `assets/generated/img-${Date.now()}.png`;
 
   const instruction =
-    `You are the Canvas Visual Reasoning & Context Engine adhering strictly to the canvas-visual-reasoning skill protocol. ` +
+    `You are the Canvas Visual Reasoning & Context Engine adhering strictly to the canvas-visual-reasoning and gaming-visual-engine skill protocols. ` +
     `Focal Concept Card: "${prompt}". ` +
     (context ? `Upstream Graph Context & Storyline Lineage: "${context}". ` : "") +
     `Selected Aesthetic Profile: "${styleType}" (Target Aspect Ratio: "${aspectRatio}"). ` +
     `Execute the 5-Stage Cognitive Reasoning Loop: ` +
     `1. Deconstruct the narrative tension and relationship between the upstream context and the node. ` +
-    `2. Formulate a bold visual metaphor with exact PBR material physics (brushed titanium, optical smoked glass, tactile textures). ` +
+    `2. Formulate a bold visual metaphor with exact PBR material physics (brushed titanium, optical smoked glass, damascus steel, volumetric particles). ` +
     `3. Establish realistic optical staging (45-degree primary key light, sharp volumetric rim light, camera lens optics). ` +
     `4. Compose the scene with 60% negative space and golden-ratio ocular hierarchy. ` +
     `5. Strip out cheap AI tropes and clichés (--no cartoon unless requested, no flat vector, no cheap neon, no blurry artifacts). ` +
@@ -183,7 +281,7 @@ export async function generateWireframe({ nodeText, context }) {
   if (c) return { wireframe: c, cached: true };
 
   const prompt =
-    `You are the Canvas Wireframe Architect adhering to the thumbnail-architect and canvas-visual-reasoning protocols. ` +
+    `You are the Canvas Wireframe Architect adhering to the thumbnail-architect, gaming-thumbnail-architect, and canvas-visual-reasoning protocols. ` +
     `Focal Node: "${nodeText}". ` +
     (context ? `Connected Canvas Story Context: "${context}". ` : "") +
     `Synthesize a structured 16:9 editorial wireframe card in clean Obsidian markdown. ` +
