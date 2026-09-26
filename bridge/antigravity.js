@@ -124,64 +124,10 @@ export function classifyIdeaAndStyle(prompt, context = "", styleOverride = null)
   };
 }
 
-export function enhancePrompt(prompt, context, styleType) {
-  const narrative = context ? `Context & Theme: [${context}]. Focal Card: [${prompt}]` : prompt;
-
-  if (styleType === "cartoon_3d") {
-    return (
-      `Award-winning 3D stylized animation studio render of ${narrative}. ` +
-      `Feature-film animation character and environment aesthetics (Pixar / Sony Animation / Fortiche Arcane quality). ` +
-      `Rich subsurface scattering on tactile materials, expressive proportions, warm volumetric studio three-point lighting, ` +
-      `colorful bounce light, soft ambient occlusion, Octane 8k render, crystal clean edges, whimsical depth. ` +
-      `--no flat 2D, no low-poly, no muddy colors, no photographic grain, no deformed anatomy`
-    );
-  }
-
-  if (styleType === "vibrant_chromatic") {
-    return (
-      `Visually stunning hyper-vibrant artistic render of ${narrative}. ` +
-      `Intense dual-tone chromatic lighting, radiant volumetric neon glow, prismatic dispersion splitting into iridescent jewel tones, ` +
-      `optical smoked glass and liquid chrome reflections against deep obsidian dark void (#050811), ` +
-      `pristine 8k render, high-contrast saturation balance, vivid color harmony. ` +
-      `--no dull colors, no washed out grey, no muddy palette, no blurry noise`
-    );
-  }
-
-  if (styleType === "portrait_3_4") {
-    return (
-      `Authoritative high-fashion editorial portrait of ${narrative}, 3:4 vertical composition. ` +
-      `Structured tactile materials with fine micro-textures, Rembrandt split lighting, ` +
-      `crisp edge definition against deep neutral dark void (#080D1A), ` +
-      `Phase One 100MP medium format, 85mm portrait lens, f/2.0, award-winning editorial quality. ` +
-      `--no anime, no childish graphics, no deformed anatomy, no blur`
-    );
-  }
-
-  if (styleType === "object_1_1") {
-    return (
-      `Award-winning luxury 3D industrial design render of ${narrative}, 1:1 composition. ` +
-      `Beveled geometric construction, brushed aerospace titanium with dark gunmetal PBR finish and subtle internal glass refraction. ` +
-      `Directional studio key light at 45 degrees, sharp volumetric rim lighting creating crisp edge definition. ` +
-      `Clean dark neutral studio backdrop (#080D1A) with soft falloff, zero clutter, Hasselblad 8k studio render. ` +
-      `--no cartoon, no flat vector, no cheap neon, no low-poly, no blurry artifacts`
-    );
-  }
-
-  // cinematic_dramatic
-  return (
-    `Cinematic film still, 16:9 dramatic composition. ${narrative}. ` +
-    `Masterful cinematography with extreme chiaroscuro contrast, razor-sharp asymmetric rim light cutting through volumetric haze and smoke. ` +
-    `50mm anamorphic lens, deep natural shadow depth, desaturated cinematic grade with rich contrast, 8k photographic film plate, ` +
-    `heavy narrative tension, atmospheric dust particles catching the spotlight. ` +
-    `--no cartoon, no flat vector, no cheap neon, no blurry artifacts, no low resolution`
-  );
-}
-
-// ── generateImage ────────────────────────────────────────────────────────────
+// ── generateImage with Deep Visual Reasoning Protocol ───────────────────────
 
 export async function generateImage({ prompt, context, styleOverride, vaultPath, model }) {
   const { aspectRatio, width, height, styleType, label } = classifyIdeaAndStyle(prompt, context, styleOverride);
-  const enhancedPrompt = enhancePrompt(prompt, context, styleType);
 
   const key = hash(`img:${prompt}:${context || ""}:${styleType}:${vaultPath || ""}:${aspectRatio}`);
   const c = cacheGet(key);
@@ -194,8 +140,18 @@ export async function generateImage({ prompt, context, styleOverride, vaultPath,
   const relPath = vaultPath || `assets/generated/img-${Date.now()}.png`;
 
   const instruction =
-    `You must call the generate_image tool with AspectRatio: "${aspectRatio}", ImageName: "canvas_art_${Date.now()}", and Prompt: "${enhancedPrompt}". ` +
-    `After the image is generated, copy the resulting image file to "${absPath}". ` +
+    `You are the Canvas Visual Reasoning & Context Engine adhering strictly to the canvas-visual-reasoning skill protocol. ` +
+    `Focal Concept Card: "${prompt}". ` +
+    (context ? `Upstream Graph Context & Storyline Lineage: "${context}". ` : "") +
+    `Selected Aesthetic Profile: "${styleType}" (Target Aspect Ratio: "${aspectRatio}"). ` +
+    `Execute the 5-Stage Cognitive Reasoning Loop: ` +
+    `1. Deconstruct the narrative tension and relationship between the upstream context and the node. ` +
+    `2. Formulate a bold visual metaphor with exact PBR material physics (brushed titanium, optical smoked glass, tactile textures). ` +
+    `3. Establish realistic optical staging (45-degree primary key light, sharp volumetric rim light, camera lens optics). ` +
+    `4. Compose the scene with 60% negative space and golden-ratio ocular hierarchy. ` +
+    `5. Strip out cheap AI tropes and clichés (--no cartoon unless requested, no flat vector, no cheap neon, no blurry artifacts). ` +
+    `Now, call the generate_image tool with AspectRatio: "${aspectRatio}", ImageName: "canvas_art_${Date.now()}", and your deeply reasoned studio-grade prompt. ` +
+    `After the image is generated, copy the resulting file to "${absPath}". ` +
     `Reply with ONLY a valid JSON object: {"savedPath": "${relPath}", "aspectRatio": "${aspectRatio}", "width": ${width}, "height": ${height}, "styleType": "${styleType}", "label": "${label}", "status": "ok"}`;
 
   const raw = await runAgy(instruction, { model, effort: "medium", timeout: 180_000 });
