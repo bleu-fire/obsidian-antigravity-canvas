@@ -8,8 +8,8 @@
 [![Backend: Antigravity](https://img.shields.io/badge/Backend-Google%20Antigravity-4285F4.svg?style=for-the-badge&logo=google)](https://antigravity.google)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-339933.svg?style=for-the-badge&logo=node.js)](https://nodejs.org)
 
-**High-fidelity visual ideation and spatial canvas intelligence powered by Google Antigravity (agy).**  
-*Zero API Keys • No Quota Restrictions • Studio 8K Imagery • 16:9 Context Wireframes • Gaming Keyart Suite*
+**High-fidelity visual ideation, UI/UX architecture, and spatial canvas intelligence powered by Google Antigravity (agy).**  
+*Zero API Keys • No Quota Restrictions • Studio 8K Imagery • 16:9 & 9:16 Wireframes • UI/UX Design Master Suite*
 
 </div>
 
@@ -32,11 +32,13 @@ curl -fsSL https://raw.githubusercontent.com/bleu-fire/obsidian-antigravity-canv
 
 * **Zero Cloud API Keys**: Eliminates HTTP 429 `RESOURCE_EXHAUSTED` and 404 service deprecation errors. Communicates locally with your authenticated Google Antigravity (`agy`) daemon.
 * **Context-Aware Graph Traversal**: Automatically follows incoming canvas edges to extract parent narrative arcs, chapter themes, and root project definitions.
-* **16:9 Editorial Wireframe Generation**: Synthesizes structured 16:9 layout cards with Headline Hooks, Sub-headlines, Composition Specifications, and Strategic Recommendations.
+* **UI/UX Design Master Protocol**: Complete mobile & web interface design across 50+ styles (Glassmorphism, Neobrutalism, Dark Mode SaaS, iOS, Cyberpunk) with atomic design tokens (HEX colors, typography, spacing).
+* **16:9 & 9:16 Wireframe Generation**: Synthesizes structured layout cards with Headline Hooks, Sub-headlines, Composition Specifications, and Strategic Recommendations.
 * **5-Stage Visual Reasoning Protocol**: Conducts semiotic analysis, optical staging (PBR shaders, Fresnel reflections, chiaroscuro contrast), and anti-cliché quality filtering prior to rendering.
 * **Gaming & Keyart Suite**: Targeted production presets for Grimdark Soulsborne, Cyberpunk Esports, and high-CTR YouTube covers.
 * **Exact Aspect Ratio Sizing**:
   * **16:9** (`560 x 315 px`): Cinematic compositions, editorial wireframes, and YouTube thumbnails.
+  * **9:16** (`380 x 680 px`): Mobile UI/UX screen mockups and interactive wireframes.
   * **1:1** (`360 x 360 px`): Industrial 3D marks, brand emblems, and legendary game loot.
   * **3:4** (`330 x 440 px`): Vertical character portraits and editorial posters.
 * **Zero Coordinate Collisions**: Automatically centers child cards relative to their parent source nodes with standardized spacing.
@@ -117,6 +119,7 @@ obsidian-antigravity-canvas/
 │   ├── start.sh                        # Background process launcher
 │   └── package.json                    # Node.js dependencies
 └── skills/                             # AI Reasoning Protocols
+    ├── ui-ux-design-master/            # Mobile & Web UI/UX, Design Systems, 50+ styles
     ├── canvas-visual-reasoning/        # 5-stage cognitive prompt synthesis
     ├── canvas-context-director/        # Graph context harvesting
     ├── gaming-visual-engine/           # AAA Unreal Engine 5 art direction
