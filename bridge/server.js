@@ -1,3 +1,15 @@
+import {
+  SKILL_DEFINITIONS,
+  executeCognitiveSkill,
+  routeIntent
+} from "./skills-engine.js";
+import {
+  listStyles,
+  listStyleFamilies,
+  getCompatibleStyles,
+  resolveStyle,
+} from "./style-registry.js";
+import { validateSkillResult } from "./canvas-validator.js";
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -5,13 +17,14 @@ import { execFileSync } from "child_process";
 import {
   generateText,
   generateImage,
-  brainstormIdeas,
   generateWireframe,
   expandWithRecommendation,
   generateMobileScreenWireframe,
-  generateDesignSystemCard
+  generateDesignSystemCard,
+  brainstormCreativeDirectorConcepts
 } from "./antigravity.js";
 import { enqueue, getStats } from "./queue.js";
+
 
 const app  = express();
 const PORT = process.env.PORT || 3099;
@@ -27,7 +40,7 @@ app.use((req, _res, next) => {
 app.get("/health", (_req, res) => {
   let agyOk = false;
   try { execFileSync(AGY, ["--help"], { timeout: 3000, stdio: "pipe" }); agyOk = true; } catch {}
-  res.json({ status: "ok", version: "2.6.0", backend: "antigravity-agy", agyOk, queue: getStats() });
+  res.json({ status: "ok", version: "2.8.0", backend: "antigravity-agy", agyOk, queue: getStats() });
 });
 
 app.post("/generate-text", async (req, res) => {
@@ -44,6 +57,15 @@ app.post("/generate-image", async (req, res) => {
   if (!prompt) return res.status(400).json({ error: "prompt required" });
   try {
     const r = await enqueue(() => generateImage({ prompt, context, styleOverride, vaultPath, model }));
+    res.json({ ok: true, ...r });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/canvas-brainstorm-director", async (req, res) => {
+  const { nodeText, context } = req.body;
+  if (!nodeText) return res.status(400).json({ error: "nodeText required" });
+  try {
+    const r = await enqueue(() => brainstormCreativeDirectorConcepts({ nodeText, context }));
     res.json({ ok: true, ...r });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -93,8 +115,78 @@ app.post("/canvas-expand-recommend", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get("/cognitive-skills", (_req, res) => {
+  res.json({ ok: true, skills: SKILL_DEFINITIONS });
+});
+
+app.post("/cognitive-skill", async (req, res) => {
+  const { skillId, nodeText, context, canvasSummary, existingNodes, userPrompt, vaultNotes } = req.body;
+  if (!skillId) return res.status(400).json({ error: "skillId required" });
+  try {
+    const raw = await enqueue(() => executeCognitiveSkill({
+      skillId,
+      nodeText,
+      context,
+      canvasSummary,
+      existingNodes,
+      userPrompt,
+      vaultNotes
+    }));
+
+    // Validate and normalize output before sending to Canvas
+    const { valid, result, errors } = validateSkillResult(raw, existingNodes || []);
+    if (!valid) {
+      console.warn(`[cognitive-skill] Validation failed for ${skillId}:`, errors);
+    }
+
+    res.json({
+      ...raw,
+      ...(valid ? result : {}),
+      validationErrors: errors.length ? errors : undefined,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post("/route-intent", (req, res) => {
+  const { userPrompt, context } = req.body;
+  const result = routeIntent({ userPrompt, context });
+  res.json({ ok: true, ...result });
+});
+
+// ── Style System Endpoints ────────────────────────────────────────────────────
+
+app.get("/styles", (_req, res) => {
+  res.json({ ok: true, styles: listStyles(), families: listStyleFamilies() });
+});
+
+app.get("/styles/families", (_req, res) => {
+  res.json({ ok: true, families: listStyleFamilies() });
+});
+
+app.get("/styles/compatible/:mediaId", (req, res) => {
+  const { mediaId } = req.params;
+  res.json({ ok: true, mediaId, styles: getCompatibleStyles(mediaId) });
+});
+
+app.post("/styles/resolve", (req, res) => {
+  const { styleOverride, mediaOverride, prompt, context } = req.body;
+  const { style, media } = resolveStyle({ styleOverride, mediaOverride, prompt, context });
+  res.json({
+    ok: true,
+    styleId: style?.id || null,
+    styleName: style?.name || null,
+    mediaId: media?.id || null,
+    mediaName: media?.name || null,
+    aspectRatio: media?.defaultAspect || "16:9",
+    dimensions: media?.defaultSize || { width: 560, height: 315 },
+  });
+});
+
 app.get("/stats", (_req, res) => res.json(getStats()));
 
 app.listen(PORT, "127.0.0.1", () => {
-  console.log("Antigravity Bridge v2.6.0 — http://127.0.0.1:" + PORT);
+  console.log("Antigravity Bridge v2.8.0 — http://127.0.0.1:" + PORT);
 });
+

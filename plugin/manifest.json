@@ -1,9 +1,9 @@
 {
   "id": "antigravity-canvas",
   "name": "Antigravity Canvas",
-  "version": "1.0.1",
+  "version": "2.7.0",
   "minAppVersion": "1.4.0",
-  "description": "Spatial AI Canvas generation for Obsidian Canvas (ideas, SVGs, high-CTR thumbnail mockups) powered by Antigravity & Gemini.",
+  "description": "AI spatial thinking and knowledge-work system for Obsidian Canvas. Cognitive reasoning workflows, intent routing, and visual asset generation powered by Antigravity.",
   "author": "Antigravity",
   "isDesktopOnly": true
 }

@@ -445,3 +445,127 @@ export async function brainstormIdeas({ nodeText, context }) {
   cacheSet(key, ideas);
   return { ideas, cached: false };
 }
+
+// ── brainstormCreativeDirectorConcepts ──────────────────────────────────────
+
+export async function brainstormCreativeDirectorConcepts({ nodeText, context }) {
+  const key = hash(`brainstorm_director:${nodeText}:${context || ""}`);
+  const c = cacheGet(key);
+  if (c) return { ...c, cached: true };
+
+  const prompt =
+    `You are the Senior Creative Director, YouTube Thumbnail Strategist, and Visual Concept Developer.
+` +
+    `Focal Topic / Card: "${nodeText}"
+` +
+    (context ? `Upstream Canvas Narrative: "${context}"
+` : "") +
+    `
+` +
+    `Execute the BRAINSTORMING ENGINE - PROFESSIONAL CREATIVE DIRECTOR protocol:
+` +
+    `1. Extract subject, action, conflict, emotional angle, and curiosity gap.
+` +
+    `2. Think strictly visually: CONCEPT = SUBJECT + ACTION + VISUAL CONTRAST + STORY.
+` +
+    `3. Reject visual cliches (no generic laptop, pointing, generic arrows, shocked face).
+` +
+    `4. Convert abstract concepts into concrete physical visual scenes.
+` +
+    `5. Enforce strong visual tension and composition previews.
+` +
+    `6. Select 3 to 4 strongest, most differentiated visual concepts.
+` +
+    `7. Map each concept to one of the 16 thumbnail styles (Cinematic, YouTube Viral, Luxury, News, Gaming, AI/Tech, Educational, Documentary, Minimal, Sports, Business, Dark Mystery, Colorful, Photorealistic, Illustrated, 3D Futuristic).
+` +
+    `8. Provide the Recommended Creative Directions synthesis.
+
+` +
+    `Return ONLY a valid JSON object with the following structure (no markdown fences, no surrounding commentary):
+` +
+    `{
+` +
+    `  "concepts": [
+` +
+    `    {
+` +
+    `      "title": "Short descriptive name",
+` +
+    `      "approach": "Mechanism used (e.g. Transformation, Visual Metaphor, Conflict, Scale, Mystery, Emotion, Extreme Contrast)",
+` +
+    `      "coreIdea": "One clear sentence describing the visual concept.",
+` +
+    `      "visualHook": "The first thing the viewer notices.",
+` +
+    `      "secondaryHook": "The element that creates curiosity.",
+` +
+    `      "story": "What is happening in the image.",
+` +
+    `      "curiosityGap": "What remains unanswered.",
+` +
+    `      "emotion": "Primary emotional reaction.",
+` +
+    `      "composition": "Exact placement and hierarchy of the major elements.",
+` +
+    `      "styleDirection": "Style name and why it fits.",
+` +
+    `      "textDirection": "Optional 2-5 words text or empty string",
+` +
+    `      "color": "3"
+` +
+    `    }
+` +
+    `  ],
+` +
+    `  "recommendations": {
+` +
+    `    "emotional": "Concept reference and strategic rationale",
+` +
+    `    "mystery": "Concept reference and strategic rationale",
+` +
+    `    "transformation": "Concept reference and strategic rationale",
+` +
+    `    "metaphor": "Concept reference and strategic rationale",
+` +
+    `    "cinematic": "Concept reference and strategic rationale"
+` +
+    `  }
+` +
+    `}`;
+
+  const raw = await runAgy(prompt, { effort: "high", timeout: 90_000 });
+  let result;
+  try {
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    result = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+  } catch (err) {
+    result = {
+      concepts: [
+        {
+          title: "Creative Director Concept",
+          approach: "Visual Storytelling",
+          coreIdea: nodeText,
+          visualHook: "Dynamic visual contrast and focal hierarchy",
+          secondaryHook: "Narrative tension",
+          story: raw.slice(0, 300),
+          curiosityGap: "The outcome of the visual conflict",
+          emotion: "Curiosity and engagement",
+          composition: "Foreground focal subject with depth layering",
+          styleDirection: "Cinematic / YouTube Viral",
+          textDirection: "",
+          color: "3",
+        },
+      ],
+      recommendations: {
+        emotional: "Focus on human expression and stakes",
+        mystery: "Withhold key resolution details",
+        transformation: "Visual before vs after split",
+        metaphor: "Physical manifestation of core idea",
+        cinematic: "High-contrast anamorphic lighting and scale",
+      },
+    };
+  }
+
+  cacheSet(key, result);
+  return { ...result, cached: false };
+}

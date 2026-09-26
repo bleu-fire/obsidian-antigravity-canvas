@@ -1,0 +1,7 @@
+node_modules/
+bridge/node_modules/
+bridge/.cache/
+.cache/
+*.log
+.env
+.DS_Store
